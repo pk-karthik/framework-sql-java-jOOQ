@@ -95,6 +95,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.function.Function;
 
 import javax.annotation.Generated;
 import javax.sql.DataSource;
@@ -698,6 +699,29 @@ public class DSL {
         return new WithImpl(null, false).with(alias, fieldAliases);
     }
 
+
+    /**
+     * Create a <code>WITH</code> clause to supply subsequent
+     * <code>SELECT</code>, <code>UPDATE</code>, <code>INSERT</code>,
+     * <code>DELETE</code>, and <code>MERGE</code> statements with
+     * {@link CommonTableExpression}s.
+     * <p>
+     * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
+     * databases, in case of which it will not be rendered. For optimal database
+     * interoperability and readability, however, it is suggested that you use
+     * {@link #with(String, String...)} for strictly non-recursive CTE and
+     * {@link #withRecursive(String, String...)} for strictly recursive CTE.
+     * <p>
+     * This works in a similar way as {@link #with(String, String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns as input.
+     */
+    @Support({ FIREBIRD, HSQLDB, POSTGRES })
+    public static WithAsStep with(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return new WithImpl(null, false).with(alias, fieldNameFunction);
+    }
+
+
     // [jooq-tools] START [with]
 
     /**
@@ -1187,6 +1211,33 @@ public class DSL {
     public static WithAsStep withRecursive(String alias, String... fieldAliases) {
         return new WithImpl(null, true).with(alias, fieldAliases);
     }
+
+
+    /**
+     * Create a <code>WITH</code> clause to supply subsequent
+     * <code>SELECT</code>, <code>UPDATE</code>, <code>INSERT</code>,
+     * <code>DELETE</code>, and <code>MERGE</code> statements with
+     * {@link CommonTableExpression}s.
+     * <p>
+     * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
+     * databases, in case of which it will not be rendered. For optimal database
+     * interoperability and readability, however, it is suggested that you use
+     * {@link #with(String, String...)} for strictly non-recursive CTE
+     * and {@link #withRecursive(String, String...)} for strictly
+     * recursive CTE.
+     * <p>
+     * Note that the {@link SQLDialect#H2} database only supports single-table,
+     * <code>RECURSIVE</code> common table expression lists.
+     * <p>
+     * This works in a similar way as {@link #with(String, String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns as input.
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES })
+    public static WithAsStep withRecursive(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return new WithImpl(null, true).with(alias, fieldNameFunction);
+    }
+
 
     // [jooq-tools] START [with-recursive]
 
@@ -1749,6 +1800,9 @@ public class DSL {
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT *</code> semantics.
      *
      * @see DSLContext#select(Collection)
      */
@@ -1780,6 +1834,9 @@ public class DSL {
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty array (e.g. by not passing any vararg
+     * argument) conveniently produces <code>SELECT *</code> semantics.
      *
      * @see DSLContext#select(SelectField...)
      */
@@ -2651,6 +2708,9 @@ public class DSL {
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT DISTINCT *</code> semantics.
      *
      * @see DSLContext#selectDistinct(Collection)
      */
@@ -2682,6 +2742,9 @@ public class DSL {
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty array (e.g. by not passing any vararg
+     * argument) conveniently produces <code>SELECT DISTINCT *</code> semantics.
      *
      * @see DSLContext#selectDistinct(SelectField...)
      */
@@ -5500,6 +5563,50 @@ public class DSL {
         return using(new DefaultConfiguration()).createView(view, fields);
     }
 
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSLContext#createView(String, String...)
+     */
+    @Support
+    public static CreateViewAsStep createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return using(new DefaultConfiguration()).createView(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSLContext#createView(Name, Name...)
+     */
+    @Support
+    public static CreateViewAsStep createView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+        return using(new DefaultConfiguration()).createView(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSLContext#createView(Table, Field...)
+     */
+    @Support
+    public static CreateViewAsStep createView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+        return using(new DefaultConfiguration()).createView(view, fieldNameFunction);
+    }
+
+
     /**
      * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
      *
@@ -5529,6 +5636,50 @@ public class DSL {
     public static CreateViewAsStep createViewIfNotExists(Table<?> view, Field<?>... fields) {
         return using(new DefaultConfiguration()).createViewIfNotExists(view, fields);
     }
+
+
+    /**
+     * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(String, String...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSLContext#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static CreateViewAsStep createViewIfNotExists(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return using(new DefaultConfiguration()).createViewIfNotExists(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(Name, Name...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSLContext#createViewIfNotExists(Name, Name...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static CreateViewAsStep createViewIfNotExists(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+        return using(new DefaultConfiguration()).createViewIfNotExists(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSLContext#createViewIfNotExists(Table, Field...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static CreateViewAsStep createViewIfNotExists(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+        return using(new DefaultConfiguration()).createViewIfNotExists(view, fieldNameFunction);
+    }
+
 
     /**
      * Create a new DSL <code>CREATE INDEX</code> statement.
@@ -6648,7 +6799,7 @@ public class DSL {
         // The field is an actual CURSOR or REF CURSOR returned from a stored
         // procedure or from a NESTED TABLE
         else if (cursor.getType() == Result.class) {
-            return new FunctionTable<Record>(cursor);
+            return new org.jooq.impl.FunctionTable<Record>(cursor);
         }
 
 
@@ -6830,6 +6981,37 @@ public class DSL {
     }
 
     // -------------------------------------------------------------------------
+    // XXX Names
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a new SQL identifier using a qualified name.
+     * <p>
+     * Use this method to construct syntax-safe, SQL-injection-safe SQL
+     * identifiers for use in plain SQL where {@link QueryPart} objects are
+     * accepted. For instance, this can be used with any of these methods:
+     * <ul>
+     * <li> {@link #field(String, QueryPart...)}</li>
+     * <li> {@link #field(String, Class, QueryPart...)}</li>
+     * <li> {@link #field(String, DataType, QueryPart...)}</li>
+     * </ul>
+     * <p>
+     * An example: <code><pre>
+     * // This qualified name here
+     * name("book", "title");
+     *
+     * // ... will render this SQL on SQL Server with RenderNameStyle.QUOTED set
+     * [book].[title]
+     * </pre></code>
+     *
+     * @param qualifiedName The SQL identifier's qualified name parts
+     * @return A {@link QueryPart} that will render the SQL identifier
+     */
+    public static Name name(String... qualifiedName) {
+        return new NameImpl(qualifiedName);
+    }
+
+    // -------------------------------------------------------------------------
     // XXX QueryPart composition
     // -------------------------------------------------------------------------
 
@@ -6892,33 +7074,6 @@ public class DSL {
     @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> defaultValue(Field<T> field) {
         return new SQLField<T>(field.getDataType(), keyword("default"));
-    }
-
-    /**
-     * Create a new SQL identifier using a qualified name.
-     * <p>
-     * Use this method to construct syntax-safe, SQL-injection-safe SQL
-     * identifiers for use in plain SQL where {@link QueryPart} objects are
-     * accepted. For instance, this can be used with any of these methods:
-     * <ul>
-     * <li> {@link #field(String, QueryPart...)}</li>
-     * <li> {@link #field(String, Class, QueryPart...)}</li>
-     * <li> {@link #field(String, DataType, QueryPart...)}</li>
-     * </ul>
-     * <p>
-     * An example: <code><pre>
-     * // This qualified name here
-     * name("book", "title");
-     *
-     * // ... will render this SQL on SQL Server with RenderNameStyle.QUOTED set
-     * [book].[title]
-     * </pre></code>
-     *
-     * @param qualifiedName The SQL identifier's qualified name parts
-     * @return A {@link QueryPart} that will render the SQL identifier
-     */
-    public static Name name(String... qualifiedName) {
-        return new NameImpl(qualifiedName);
     }
 
     /**
@@ -7015,7 +7170,7 @@ public class DSL {
      * @deprecated - [#3843] - 3.6.0 - use {@link #sequence(Name)} instead
      */
     @Deprecated
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     public static Sequence<BigInteger> sequenceByName(String... qualifiedName) {
         return sequenceByName(BigInteger.class, qualifiedName);
     }
@@ -7044,7 +7199,7 @@ public class DSL {
      * @deprecated - [#3843] - 3.6.0 - use {@link #sequence(Name, Class)} instead
      */
     @Deprecated
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     public static <T extends Number> Sequence<T> sequenceByName(Class<T> type, String... qualifiedName) {
         return sequenceByName(getDataType(type), qualifiedName);
     }
@@ -7073,7 +7228,7 @@ public class DSL {
      * @deprecated - [#3843] - 3.6.0 - use {@link #sequence(Name, DataType)} instead
      */
     @Deprecated
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     public static <T extends Number> Sequence<T> sequenceByName(DataType<T> type, String... qualifiedName) {
         if (qualifiedName == null)
             throw new NullPointerException();
@@ -7104,7 +7259,7 @@ public class DSL {
      * [MY_SCHEMA].[MY_SEQUENCE]
      * </pre></code>
      */
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     public static Sequence<BigInteger> sequence(Name name) {
         return sequence(name, BigInteger.class);
     }
@@ -7126,7 +7281,7 @@ public class DSL {
      * [MY_SCHEMA].[MY_SEQUENCE]
      * </pre></code>
      */
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     public static <T extends Number> Sequence<T> sequence(Name name, Class<T> type) {
         return sequence(name, getDataType(type));
     }
@@ -7148,7 +7303,7 @@ public class DSL {
      * [MY_SCHEMA].[MY_SEQUENCE]
      * </pre></code>
      */
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     public static <T extends Number> Sequence<T> sequence(Name name, DataType<T> type) {
         if (name == null)
             throw new NullPointerException();
@@ -7501,6 +7656,17 @@ public class DSL {
      * contain user-defined plain SQL, because sometimes it is easier to express
      * things directly in SQL.
      * <p>
+     * This overload takes a set of {@link QueryPart} arguments which are
+     * replaced into the SQL string template at the appropriate index. Example:
+     * <p>
+     * <code><pre>
+     * // Argument QueryParts are replaced into the SQL string at the appropriate index
+     * sql("select {0}, {1} from {2}", TABLE.COL1, TABLE.COL2, TABLE);
+     *
+     * // Bind variables are supported as well, for backwards compatibility
+     * sql("select col1, col2 from table where col1 = ?", val(1));
+     * </pre></code>
+     * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
@@ -7512,6 +7678,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A query part wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -7527,6 +7694,13 @@ public class DSL {
      * things directly in SQL. There must be as many binding variables contained
      * in the SQL, as passed in the bindings parameter
      * <p>
+     * This overload takes a set of bind value arguments which are replaced our
+     * bound into the SQL string template at the appropriate index. Example:
+     * <p>
+     * <code><pre>
+     * sql("select col1, col2 from table where col1 = ?", 1);
+     * </pre></code>
+     * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
@@ -7535,6 +7709,7 @@ public class DSL {
      * @param sql The SQL
      * @return A query part wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -7585,6 +7760,7 @@ public class DSL {
      * @return A query part wrapping the plain SQL
      * @deprecated - 3.6.0 - [#3854] - Use {@link #sql(String, QueryPart...)} instead
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Deprecated
     @Support
@@ -7610,6 +7786,7 @@ public class DSL {
      * @return A query part wrapping the plain SQL
      * @deprecated - 3.6.0 - [#3854] - Use {@link #sql(String, Object...)} instead
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Deprecated
     @Support
@@ -7688,6 +7865,7 @@ public class DSL {
      * @param bindings The bindings
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -7721,6 +7899,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -7867,6 +8046,7 @@ public class DSL {
      * @param bindings The bindings
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -7900,6 +8080,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -7987,6 +8168,7 @@ public class DSL {
      * @param sql The SQL
      * @return A table wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -8019,6 +8201,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A table wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -8038,7 +8221,7 @@ public class DSL {
      * @return A field wrapping the plain SQL
      * @see SQL
      */
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     @PlainSQL
     public static Sequence<BigInteger> sequence(String sql) {
         return sequence(sql, BigInteger.class);
@@ -8057,7 +8240,7 @@ public class DSL {
      * @return A field wrapping the plain SQL
      * @see SQL
      */
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     @PlainSQL
     public static <T extends Number> Sequence<T> sequence(String sql, Class<T> type) {
         return sequence(sql, getDataType(type));
@@ -8076,7 +8259,7 @@ public class DSL {
      * @return A field wrapping the plain SQL
      * @see SQL
      */
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     @PlainSQL
     public static <T extends Number> Sequence<T> sequence(String sql, DataType<T> type) {
         return new SequenceImpl<T>(sql, null, type, true);
@@ -8163,6 +8346,7 @@ public class DSL {
      * @param bindings The bindings for the field
      * @return A field wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -8254,6 +8438,7 @@ public class DSL {
      * @param bindings The bindings for the field
      * @return A field wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -8345,6 +8530,7 @@ public class DSL {
      * @param bindings The bindings for the field
      * @return A field wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -8381,6 +8567,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A field wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -8417,6 +8604,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A field wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -8454,6 +8642,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A field wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -8498,7 +8687,7 @@ public class DSL {
     @Support
     @PlainSQL
     public static <T> Field<T> function(String name, DataType<T> type, Field<?>... arguments) {
-        return new Function<T>(name, type, nullSafe(arguments));
+        return new org.jooq.impl.Function<T>(name, type, nullSafe(arguments));
     }
 
     /**
@@ -8524,7 +8713,7 @@ public class DSL {
      */
     @Support
     public static <T> Field<T> function(Name name, DataType<T> type, Field<?>... arguments) {
-        return new Function<T>(name, type, nullSafe(arguments));
+        return new org.jooq.impl.Function<T>(name, type, nullSafe(arguments));
     }
 
     /**
@@ -8598,6 +8787,7 @@ public class DSL {
      * @param bindings The bindings
      * @return A condition wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -8629,6 +8819,7 @@ public class DSL {
      *            {numbered placeholder} locations
      * @return A condition wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -11144,7 +11335,7 @@ public class DSL {
      */
     @Support
     public static Field<Integer> charLength(Field<String> field) {
-        return new Function<Integer>(Term.CHAR_LENGTH, SQLDataType.INTEGER, nullSafe(field));
+        return new org.jooq.impl.Function<Integer>(Term.CHAR_LENGTH, SQLDataType.INTEGER, nullSafe(field));
     }
 
     /**
@@ -11164,7 +11355,7 @@ public class DSL {
      */
     @Support
     public static Field<Integer> bitLength(Field<String> field) {
-        return new Function<Integer>(Term.BIT_LENGTH, SQLDataType.INTEGER, nullSafe(field));
+        return new org.jooq.impl.Function<Integer>(Term.BIT_LENGTH, SQLDataType.INTEGER, nullSafe(field));
     }
 
     /**
@@ -11184,7 +11375,7 @@ public class DSL {
      */
     @Support
     public static Field<Integer> octetLength(Field<String> field) {
-        return new Function<Integer>(Term.OCTET_LENGTH, SQLDataType.INTEGER, nullSafe(field));
+        return new org.jooq.impl.Function<Integer>(Term.OCTET_LENGTH, SQLDataType.INTEGER, nullSafe(field));
     }
 
     // ------------------------------------------------------------------------
@@ -12112,7 +12303,7 @@ public class DSL {
             array[i] = new WrappedList(new QueryPartList<Field<?>>(fieldSets[i]));
         }
 
-        return new Function<Object>("grouping sets", SQLDataType.OTHER, array);
+        return new org.jooq.impl.Function<Object>("grouping sets", SQLDataType.OTHER, array);
     }
 
     /**
@@ -13127,7 +13318,7 @@ public class DSL {
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static Field<BigDecimal> atan2(Field<? extends Number> x, Field<? extends Number> y) {
-        return new Function<BigDecimal>(Term.ATAN2, SQLDataType.NUMERIC, nullSafe(x), nullSafe(y));
+        return new org.jooq.impl.Function<BigDecimal>(Term.ATAN2, SQLDataType.NUMERIC, nullSafe(x), nullSafe(y));
     }
 
     /**
@@ -13428,7 +13619,7 @@ public class DSL {
      */
     @Support
     public static AggregateFunction<Integer> count() {
-        return count(Function.ASTERISK);
+        return count(org.jooq.impl.Function.ASTERISK);
     }
 
     /**
@@ -13436,7 +13627,7 @@ public class DSL {
      */
     @Support
     public static AggregateFunction<Integer> count(Field<?> field) {
-        return new Function<Integer>("count", SQLDataType.INTEGER, nullSafe(field));
+        return new org.jooq.impl.Function<Integer>("count", SQLDataType.INTEGER, nullSafe(field));
     }
 
     /**
@@ -13456,7 +13647,7 @@ public class DSL {
      */
     @Support({ CUBRID, DERBY, H2, HSQLDB, FIREBIRD, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static AggregateFunction<Integer> countDistinct(Field<?> field) {
-        return new Function<Integer>("count", true, SQLDataType.INTEGER, nullSafe(field));
+        return new org.jooq.impl.Function<Integer>("count", true, SQLDataType.INTEGER, nullSafe(field));
     }
 
     /**
@@ -13482,7 +13673,7 @@ public class DSL {
      */
     @Support({ HSQLDB, MYSQL, POSTGRES })
     public static AggregateFunction<Integer> countDistinct(Field<?>... fields) {
-        return new Function<Integer>("count", true, SQLDataType.INTEGER, nullSafe(fields));
+        return new org.jooq.impl.Function<Integer>("count", true, SQLDataType.INTEGER, nullSafe(fields));
     }
 
     /**
@@ -13542,7 +13733,7 @@ public class DSL {
      */
     @Support({ HSQLDB, POSTGRES })
     public static <T> ArrayAggOrderByStep<T[]> arrayAgg(Field<T> field) {
-        return new Function<T[]>(Term.ARRAY_AGG, field.getDataType().getArrayDataType(), nullSafe(field));
+        return new org.jooq.impl.Function<T[]>(Term.ARRAY_AGG, field.getDataType().getArrayDataType(), nullSafe(field));
     }
 
 
@@ -13690,7 +13881,7 @@ public class DSL {
      */
     @Support
     public static <T> AggregateFunction<T> max(Field<T> field) {
-        return new Function<T>("max", nullSafeDataType(field), nullSafe(field));
+        return new org.jooq.impl.Function<T>("max", nullSafeDataType(field), nullSafe(field));
     }
 
     /**
@@ -13698,7 +13889,7 @@ public class DSL {
      */
     @Support
     public static <T> AggregateFunction<T> maxDistinct(Field<T> field) {
-        return new Function<T>("max", true, nullSafeDataType(field), nullSafe(field));
+        return new org.jooq.impl.Function<T>("max", true, nullSafeDataType(field), nullSafe(field));
     }
 
     /**
@@ -13706,7 +13897,7 @@ public class DSL {
      */
     @Support
     public static <T> AggregateFunction<T> min(Field<T> field) {
-        return new Function<T>("min", nullSafeDataType(field), nullSafe(field));
+        return new org.jooq.impl.Function<T>("min", nullSafeDataType(field), nullSafe(field));
     }
 
     /**
@@ -13714,7 +13905,7 @@ public class DSL {
      */
     @Support
     public static <T> AggregateFunction<T> minDistinct(Field<T> field) {
-        return new Function<T>("min", true, nullSafeDataType(field), nullSafe(field));
+        return new org.jooq.impl.Function<T>("min", true, nullSafeDataType(field), nullSafe(field));
     }
 
     /**
@@ -13722,7 +13913,7 @@ public class DSL {
      */
     @Support
     public static AggregateFunction<BigDecimal> sum(Field<? extends Number> field) {
-        return new Function<BigDecimal>("sum", SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>("sum", SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13730,7 +13921,7 @@ public class DSL {
      */
     @Support
     public static AggregateFunction<BigDecimal> sumDistinct(Field<? extends Number> field) {
-        return new Function<BigDecimal>("sum", true, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>("sum", true, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13738,7 +13929,7 @@ public class DSL {
      */
     @Support
     public static AggregateFunction<BigDecimal> avg(Field<? extends Number> field) {
-        return new Function<BigDecimal>("avg", SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>("avg", SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13746,7 +13937,7 @@ public class DSL {
      */
     @Support
     public static AggregateFunction<BigDecimal> avgDistinct(Field<? extends Number> field) {
-        return new Function<BigDecimal>("avg", true, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>("avg", true, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13754,7 +13945,7 @@ public class DSL {
      */
     @Support({ CUBRID, HSQLDB, POSTGRES_9_4 })
     public static AggregateFunction<BigDecimal> median(Field<? extends Number> field) {
-        return new Function<BigDecimal>(Term.MEDIAN, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>(Term.MEDIAN, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13762,7 +13953,7 @@ public class DSL {
      */
     @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static AggregateFunction<BigDecimal> stddevPop(Field<? extends Number> field) {
-        return new Function<BigDecimal>(Term.STDDEV_POP, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>(Term.STDDEV_POP, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13770,7 +13961,7 @@ public class DSL {
      */
     @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static AggregateFunction<BigDecimal> stddevSamp(Field<? extends Number> field) {
-        return new Function<BigDecimal>(Term.STDDEV_SAMP, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>(Term.STDDEV_SAMP, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13778,7 +13969,7 @@ public class DSL {
      */
     @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static AggregateFunction<BigDecimal> varPop(Field<? extends Number> field) {
-        return new Function<BigDecimal>(Term.VAR_POP, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>(Term.VAR_POP, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13786,7 +13977,7 @@ public class DSL {
      */
     @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static AggregateFunction<BigDecimal> varSamp(Field<? extends Number> field) {
-        return new Function<BigDecimal>(Term.VAR_SAMP, SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>(Term.VAR_SAMP, SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -13801,7 +13992,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrSlope(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_slope", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_slope", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13816,7 +14007,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrIntercept(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_intercept", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_intercept", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13831,7 +14022,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrCount(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_count", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_count", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13846,7 +14037,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrR2(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_r2", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_r2", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13861,7 +14052,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrAvgX(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_avgx", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_avgx", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13876,7 +14067,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrAvgY(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_avgy", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_avgy", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13891,7 +14082,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrSXX(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_sxx", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_sxx", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13906,7 +14097,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrSYY(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_syy", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_syy", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13921,7 +14112,7 @@ public class DSL {
      */
     @Support({ POSTGRES })
     public static AggregateFunction<BigDecimal> regrSXY(Field<? extends Number> y, Field<? extends Number> x) {
-        return new Function<BigDecimal>("regr_sxy", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
+        return new org.jooq.impl.Function<BigDecimal>("regr_sxy", SQLDataType.NUMERIC, nullSafe(y), nullSafe(x));
     }
 
     /**
@@ -13943,7 +14134,7 @@ public class DSL {
      */
     @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static OrderedAggregateFunction<String> listAgg(Field<?> field) {
-        return new Function<String>(Term.LIST_AGG, SQLDataType.VARCHAR, nullSafe(field));
+        return new org.jooq.impl.Function<String>(Term.LIST_AGG, SQLDataType.VARCHAR, nullSafe(field));
     }
 
     /**
@@ -13965,7 +14156,7 @@ public class DSL {
      */
     @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static OrderedAggregateFunction<String> listAgg(Field<?> field, String separator) {
-        return new Function<String>(Term.LIST_AGG, SQLDataType.VARCHAR, nullSafe(field), inline(separator));
+        return new org.jooq.impl.Function<String>(Term.LIST_AGG, SQLDataType.VARCHAR, nullSafe(field), inline(separator));
     }
 
     /**
@@ -14065,7 +14256,7 @@ public class DSL {
      */
     @Support({ POSTGRES_9_4 })
     public static OrderedAggregateFunction<Integer> rank(Field<?>... fields) {
-        return new Function<Integer>("rank", SQLDataType.INTEGER, fields);
+        return new org.jooq.impl.Function<Integer>("rank", SQLDataType.INTEGER, fields);
     }
 
     /**
@@ -14074,7 +14265,7 @@ public class DSL {
      */
     @Support({ POSTGRES_9_4 })
     public static OrderedAggregateFunction<Integer> denseRank(Field<?>... fields) {
-        return new Function<Integer>("dense_rank", SQLDataType.INTEGER, fields);
+        return new org.jooq.impl.Function<Integer>("dense_rank", SQLDataType.INTEGER, fields);
     }
 
     /**
@@ -14083,7 +14274,7 @@ public class DSL {
      */
     @Support({ POSTGRES_9_4 })
     public static OrderedAggregateFunction<Integer> percentRank(Field<?>... fields) {
-        return new Function<Integer>("percent_rank", SQLDataType.INTEGER, fields);
+        return new org.jooq.impl.Function<Integer>("percent_rank", SQLDataType.INTEGER, fields);
     }
 
     /**
@@ -14092,7 +14283,7 @@ public class DSL {
      */
     @Support({ POSTGRES_9_4 })
     public static OrderedAggregateFunction<BigDecimal> cumeDist(Field<?>... fields) {
-        return new Function<BigDecimal>("cume_dist", SQLDataType.NUMERIC, fields);
+        return new org.jooq.impl.Function<BigDecimal>("cume_dist", SQLDataType.NUMERIC, fields);
     }
 
     /**
@@ -14120,7 +14311,7 @@ public class DSL {
      */
     @Support({ POSTGRES_9_4 })
     public static OrderedAggregateFunction<BigDecimal> percentileCont(Field<? extends Number> field) {
-        return new Function<BigDecimal>("percentile_cont", SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>("percentile_cont", SQLDataType.NUMERIC, nullSafe(field));
     }
 
     /**
@@ -14148,7 +14339,7 @@ public class DSL {
      */
     @Support({ POSTGRES_9_4 })
     public static OrderedAggregateFunction<BigDecimal> percentileDisc(Field<? extends Number> field) {
-        return new Function<BigDecimal>("percentile_disc", SQLDataType.NUMERIC, nullSafe(field));
+        return new org.jooq.impl.Function<BigDecimal>("percentile_disc", SQLDataType.NUMERIC, nullSafe(field));
     }
 
     // -------------------------------------------------------------------------
@@ -14370,7 +14561,7 @@ public class DSL {
      */
     @Support({ CUBRID, DERBY, FIREBIRD_3_0, H2, HSQLDB, POSTGRES })
     public static WindowOverStep<Integer> rowNumber() {
-        return new Function<Integer>(ROW_NUMBER, SQLDataType.INTEGER);
+        return new org.jooq.impl.Function<Integer>(ROW_NUMBER, SQLDataType.INTEGER);
     }
 
     /**
@@ -14378,7 +14569,7 @@ public class DSL {
      */
     @Support({ CUBRID, FIREBIRD_3_0, POSTGRES })
     public static WindowOverStep<Integer> rank() {
-        return new Function<Integer>("rank", SQLDataType.INTEGER);
+        return new org.jooq.impl.Function<Integer>("rank", SQLDataType.INTEGER);
     }
 
     /**
@@ -14386,7 +14577,7 @@ public class DSL {
      */
     @Support({ CUBRID, FIREBIRD_3_0, POSTGRES })
     public static WindowOverStep<Integer> denseRank() {
-        return new Function<Integer>("dense_rank", SQLDataType.INTEGER);
+        return new org.jooq.impl.Function<Integer>("dense_rank", SQLDataType.INTEGER);
     }
 
     /**
@@ -14394,7 +14585,7 @@ public class DSL {
      */
     @Support({ CUBRID, POSTGRES })
     public static WindowOverStep<BigDecimal> percentRank() {
-        return new Function<BigDecimal>("percent_rank", SQLDataType.NUMERIC);
+        return new org.jooq.impl.Function<BigDecimal>("percent_rank", SQLDataType.NUMERIC);
     }
 
     /**
@@ -14402,7 +14593,7 @@ public class DSL {
      */
     @Support({ CUBRID, POSTGRES })
     public static WindowOverStep<BigDecimal> cumeDist() {
-        return new Function<BigDecimal>("cume_dist", SQLDataType.NUMERIC);
+        return new org.jooq.impl.Function<BigDecimal>("cume_dist", SQLDataType.NUMERIC);
     }
 
     /**
@@ -14410,7 +14601,23 @@ public class DSL {
      */
     @Support({ CUBRID, POSTGRES })
     public static WindowOverStep<Integer> ntile(int number) {
-        return new Function<Integer>("ntile", SQLDataType.INTEGER, inline(number));
+        return new org.jooq.impl.Function<Integer>("ntile", SQLDataType.INTEGER, inline(number));
+    }
+
+    /**
+     * The <code>ratio_to_report([expression]) over ([analytic clause])</code> function.
+     */
+    @Support({ CUBRID, POSTGRES })
+    public static WindowOverStep<BigDecimal> ratioToReport(Number number) {
+        return ratioToReport(Tools.field(number));
+    }
+
+    /**
+     * The <code>ratio_to_report([expression]) over ([analytic clause])</code> function.
+     */
+    @Support({ CUBRID, POSTGRES })
+    public static WindowOverStep<BigDecimal> ratioToReport(Field<? extends Number> field) {
+        return new RatioToReport(nullSafe(field));
     }
 
     /**
@@ -14418,7 +14625,7 @@ public class DSL {
      */
     @Support({ CUBRID, FIREBIRD_3_0, POSTGRES })
     public static <T> WindowIgnoreNullsStep<T> firstValue(Field<T> field) {
-        return new Function<T>("first_value", nullSafeDataType(field), nullSafe(field));
+        return new org.jooq.impl.Function<T>("first_value", nullSafeDataType(field), nullSafe(field));
     }
 
     /**
@@ -14426,7 +14633,7 @@ public class DSL {
      */
     @Support({ CUBRID, FIREBIRD_3_0, POSTGRES })
     public static <T> WindowIgnoreNullsStep<T> lastValue(Field<T> field) {
-        return new Function<T>("last_value", nullSafeDataType(field), nullSafe(field));
+        return new org.jooq.impl.Function<T>("last_value", nullSafeDataType(field), nullSafe(field));
     }
 
     /**
@@ -14442,7 +14649,7 @@ public class DSL {
      */
     @Support({ FIREBIRD_3_0, POSTGRES })
     public static <T> WindowIgnoreNullsStep<T> nthValue(Field<T> field, Field<Integer> nth) {
-        return new Function<T>("nth_value", nullSafeDataType(field), nullSafe(field), nullSafe(nth));
+        return new org.jooq.impl.Function<T>("nth_value", nullSafeDataType(field), nullSafe(field), nullSafe(nth));
     }
 
     /**

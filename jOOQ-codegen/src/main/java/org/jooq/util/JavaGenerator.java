@@ -217,6 +217,12 @@ public class JavaGenerator extends AbstractGenerator {
         log.info("  JPA annotations", generateJPAAnnotations());
         log.info("  validation annotations", generateValidationAnnotations());
         log.info("  instance fields", generateInstanceFields());
+        log.info("  sequences", generateSequences());
+        log.info("  udts", generateUDTs());
+        log.info("  routines", generateRoutines());
+        log.info("  tables", generateTables()
+            + ((!generateTables && generateRecords) ? " (forced to true because of <records/>)" :
+              ((!generateTables && generateDaos) ? " (forced to true because of <daos/>)" : "")));
         log.info("  records", generateRecords()
             + ((!generateRecords && generateDaos) ? " (forced to true because of <daos/>)" : ""));
         log.info("  pojos", generatePojos()
@@ -228,7 +234,8 @@ public class JavaGenerator extends AbstractGenerator {
         log.info("  immutable interfaces", generateInterfaces());
         log.info("  daos", generateDaos());
         log.info("  relations", generateRelations()
-            + ((!generateRelations && generateDaos) ? " (forced to true because of <daos/>)" : ""));
+            + ((!generateRelations && generateTables) ? " (forced to true because of <tables/>)" :
+              ((!generateRelations && generateDaos) ? " (forced to true because of <daos/>)" : "")));
         log.info("  table-valued functions", generateTableValuedFunctions());
         log.info("  global references", generateGlobalObjectReferences());
         log.info("----------------------------------------------------------");
@@ -252,12 +259,45 @@ public class JavaGenerator extends AbstractGenerator {
         log.info("Generating catalogs", "Total: " + database.getCatalogs().size());
         for (CatalogDefinition catalog : database.getCatalogs()) {
             try {
-                generate(catalog);
+                if (generateCatalogIfEmpty(catalog))
+                    generate(catalog);
+                else
+                    log.info("Excluding empty catalog", catalog);
             }
             catch (Exception e) {
                 throw new GeneratorException("Error generating code for catalog " + catalog, e);
             }
         }
+    }
+
+    private boolean generateCatalogIfEmpty(CatalogDefinition catalog) {
+        if (generateEmptyCatalogs())
+            return true;
+
+        List<SchemaDefinition> schemas = catalog.getSchemata();
+        if (schemas.isEmpty())
+            return false;
+
+        for (SchemaDefinition schema : schemas)
+            if (generateSchemaIfEmpty(schema))
+                return true;
+
+        return false;
+    }
+
+    private boolean generateSchemaIfEmpty(SchemaDefinition schema) {
+        if (generateEmptySchemas())
+            return true;
+
+        if (database.getArrays(schema).isEmpty()
+            && database.getEnums(schema).isEmpty()
+            && database.getPackages(schema).isEmpty()
+            && database.getRoutines(schema).isEmpty()
+            && database.getTables(schema).isEmpty()
+            && database.getUDTs(schema).isEmpty())
+            return false;
+
+        return true;
     }
 
     private void generate(CatalogDefinition catalog) {
@@ -287,7 +327,10 @@ public class JavaGenerator extends AbstractGenerator {
         log.info("Generating schemata", "Total: " + catalog.getSchemata().size());
         for (SchemaDefinition schema : catalog.getSchemata()) {
             try {
-                generate(schema);
+                if (generateSchemaIfEmpty(schema))
+                    generate(schema);
+                else
+                    log.info("Excluding empty schema", schema);
             }
             catch (Exception e) {
                 throw new GeneratorException("Error generating code for schema " + schema, e);
@@ -322,11 +365,11 @@ public class JavaGenerator extends AbstractGenerator {
         // ----------------------------------------------------------------------
         generateSchema(schema);
 
-        if (generateGlobalObjectReferences() && generateGlobalSequenceReferences() && database.getSequences(schema).size() > 0) {
+        if (generateGlobalSequenceReferences() && database.getSequences(schema).size() > 0) {
             generateSequences(schema);
         }
 
-        if (database.getTables(schema).size() > 0) {
+        if (generateTables() && database.getTables(schema).size() > 0) {
             generateTables(schema);
         }
 
@@ -338,7 +381,7 @@ public class JavaGenerator extends AbstractGenerator {
             generateDaos(schema);
         }
 
-        if (generateGlobalObjectReferences() && generateGlobalTableReferences() && database.getTables(schema).size() > 0) {
+        if (generateGlobalTableReferences() && database.getTables(schema).size() > 0) {
             generateTableReferences(schema);
         }
 
@@ -354,7 +397,7 @@ public class JavaGenerator extends AbstractGenerator {
             generateInterfaces(schema);
         }
 
-        if (database.getUDTs(schema).size() > 0) {
+        if (generateUDTs() && database.getUDTs(schema).size() > 0) {
             generateUDTs(schema);
         }
 
@@ -362,7 +405,7 @@ public class JavaGenerator extends AbstractGenerator {
             generateUDTPojos(schema);
         }
 
-        if (database.getUDTs(schema).size() > 0) {
+        if (generateUDTs() && generateRecords() && database.getUDTs(schema).size() > 0) {
             generateUDTRecords(schema);
         }
 
@@ -370,27 +413,27 @@ public class JavaGenerator extends AbstractGenerator {
             generateUDTInterfaces(schema);
         }
 
-        if (database.getUDTs(schema).size() > 0) {
+        if (generateUDTs() && generateRoutines() && database.getUDTs(schema).size() > 0) {
             generateUDTRoutines(schema);
         }
 
-        if (generateGlobalObjectReferences() && generateGlobalUDTReferences() && database.getUDTs(schema).size() > 0) {
+        if (generateGlobalUDTReferences() && database.getUDTs(schema).size() > 0) {
             generateUDTReferences(schema);
         }
 
-        if (database.getArrays(schema).size() > 0) {
+        if (generateUDTs() && database.getArrays(schema).size() > 0) {
             generateArrays(schema);
         }
 
-        if (database.getEnums(schema).size() > 0) {
+        if (generateUDTs() && database.getEnums(schema).size() > 0) {
             generateEnums(schema);
         }
 
-        if (database.getDomains(schema).size() > 0) {
+        if (generateUDTs() && database.getDomains(schema).size() > 0) {
             generateDomains(schema);
         }
 
-        if (generateGlobalObjectReferences() && generateGlobalRoutineReferences() && database.getRoutines(schema).size() > 0 || hasTableValuedFunctions(schema)) {
+        if (generateRoutines() && (database.getRoutines(schema).size() > 0 || hasTableValuedFunctions(schema))) {
             generateRoutines(schema);
         }
 
@@ -1006,7 +1049,7 @@ public class JavaGenerator extends AbstractGenerator {
                 out.tab(1).header("Primary key information");
 
                 if (scala) {
-                    out.tab(1).println("override def key() : %s[%s] = {", out.ref(Record.class.getName() + keyDegree), keyType);
+                    out.tab(1).println("override def key : %s[%s] = {", out.ref(Record.class.getName() + keyDegree), keyType);
                     out.tab(2).println("return super.key.asInstanceOf[ %s[%s] ]", out.ref(Record.class.getName() + keyDegree), keyType);
                     out.tab(1).println("}");
                 }
@@ -1890,6 +1933,7 @@ public class JavaGenerator extends AbstractGenerator {
         printClassAnnotations(out, e.getSchema());
 
 
+        boolean enumHasNoSchema = e.isSynthetic() || !(e.getDatabase() instanceof PostgresDatabase);
         if (scala) {
             out.println("object %s {", className);
             out.println();
@@ -1899,7 +1943,7 @@ public class JavaGenerator extends AbstractGenerator {
             }
 
             out.println();
-            out.tab(1).println("def values() : %s[%s] = %s(",
+            out.tab(1).println("def values : %s[%s] = %s(",
                 out.ref("scala.Array"),
                 className,
                 out.ref("scala.Array"));
@@ -1923,10 +1967,15 @@ public class JavaGenerator extends AbstractGenerator {
             out.println();
             out.println("sealed trait %s extends %s[[before= with ][%s]] {", className, EnumType.class, interfaces);
 
+            if (enumHasNoSchema)
+                out.tab(1).println("override def getCatalog : %s = null", Catalog.class);
+            else
+                out.tab(1).println("override def getCatalog : %s = if (getSchema == null) null else getSchema().getCatalog()", Catalog.class);
+
             // [#2135] Only the PostgreSQL database supports schema-scoped enum types
             out.tab(1).println("override def getSchema : %s = %s",
                 Schema.class,
-                (e.isSynthetic() || !(e.getDatabase() instanceof PostgresDatabase))
+                enumHasNoSchema
                     ? "null"
                     : out.ref(getStrategy().getFullJavaIdentifier(e.getSchema()), 2));
             out.tab(1).println("override def getName : %s = %s",
@@ -1961,11 +2010,21 @@ public class JavaGenerator extends AbstractGenerator {
             out.tab(2).println("this.literal = literal;");
             out.tab(1).println("}");
 
+            out.tab(1).overrideInherit();
+            out.tab(1).println("public %s getCatalog() {", Catalog.class);
+
+            if (enumHasNoSchema)
+                out.tab(2).println("return null;");
+            else
+                out.tab(2).println("return getSchema() == null ? null : getSchema().getCatalog();");
+
+            out.tab(1).println("}");
+
             // [#2135] Only the PostgreSQL database supports schema-scoped enum types
             out.tab(1).overrideInherit();
             out.tab(1).println("public %s getSchema() {", Schema.class);
             out.tab(2).println("return %s;",
-                (e.isSynthetic() || !(e.getDatabase() instanceof PostgresDatabase))
+                enumHasNoSchema
                     ? "null"
                     : out.ref(getStrategy().getFullJavaIdentifier(e.getSchema()), 2));
             out.tab(1).println("}");
@@ -2043,34 +2102,38 @@ public class JavaGenerator extends AbstractGenerator {
     protected void generateRoutines(SchemaDefinition schema) {
         log.info("Generating routines and table-valued functions");
 
-        JavaWriter out = newJavaWriter(new File(getStrategy().getFile(schema).getParentFile(), "Routines.java"));
-        printPackage(out, schema);
-        printClassJavadoc(out, "Convenience access to all stored procedures and functions in " + schema.getOutputName());
-        printClassAnnotations(out, schema);
+        if (generateGlobalRoutineReferences()) {
+            JavaWriter out = newJavaWriter(new File(getStrategy().getFile(schema).getParentFile(), "Routines.java"));
+            printPackage(out, schema);
+            printClassJavadoc(out, "Convenience access to all stored procedures and functions in " + schema.getOutputName());
+            printClassAnnotations(out, schema);
 
-        if (scala)
-        	 out.println("object Routines {");
-        else
-            out.println("public class Routines {");
+            if (scala)
+                out.println("object Routines {");
+            else
+                out.println("public class Routines {");
+
+            for (RoutineDefinition routine : database.getRoutines(schema))
+                printRoutine(out, routine);
+
+            for (TableDefinition table : database.getTables(schema)) {
+                if (table.isTableValuedFunction()) {
+                    printTableValuedFunction(out, table, getStrategy().getJavaMethodName(table, Mode.DEFAULT));
+                }
+            }
+
+            out.println("}");
+            closeJavaWriter(out);
+        }
 
         for (RoutineDefinition routine : database.getRoutines(schema)) {
-            printRoutine(out, routine);
-
             try {
                 generateRoutine(schema, routine);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Error while generating routine " + routine, e);
             }
         }
-
-        for (TableDefinition table : database.getTables(schema)) {
-            if (table.isTableValuedFunction()) {
-                printTableValuedFunction(out, table, getStrategy().getJavaMethodName(table, Mode.DEFAULT));
-            }
-        }
-
-        out.println("}");
-        closeJavaWriter(out);
 
         watch.splitInfo("Routines generated");
     }
@@ -3525,21 +3588,26 @@ public class JavaGenerator extends AbstractGenerator {
             out.tab(1).println("public static final %s %s = new %s();", className, catalogId, className);
         }
 
-        if (generateGlobalObjectReferences() && generateGlobalSchemaReferences()) {
+        List<SchemaDefinition> schemas = new ArrayList<SchemaDefinition>();
+        if (generateGlobalSchemaReferences()) {
             for (SchemaDefinition schema : catalog.getSchemata()) {
-                final String schemaClassName = out.ref(getStrategy().getFullJavaClassName(schema));
-                final String schemaId = getStrategy().getJavaIdentifier(schema);
-                final String schemaFullId = getStrategy().getFullJavaIdentifier(schema);
-                final String schemaComment = !StringUtils.isBlank(schema.getComment())
-                    ? schema.getComment()
-                    : "The schema <code>" + schema.getQualifiedOutputName() + "</code>.";
+                if (generateSchemaIfEmpty(schema)) {
+                    schemas.add(schema);
 
-                out.tab(1).javadoc(schemaComment);
+                    final String schemaClassName = out.ref(getStrategy().getFullJavaClassName(schema));
+                    final String schemaId = getStrategy().getJavaIdentifier(schema);
+                    final String schemaFullId = getStrategy().getFullJavaIdentifier(schema);
+                    final String schemaComment = !StringUtils.isBlank(schema.getComment())
+                        ? schema.getComment()
+                        : "The schema <code>" + schema.getQualifiedOutputName() + "</code>.";
 
-                if (scala)
-                    out.tab(1).println("val %s = %s", schemaId, schemaFullId);
-                else
-                    out.tab(1).println("public final %s %s = %s;", schemaClassName, schemaId, schemaFullId);
+                    out.tab(1).javadoc(schemaComment);
+
+                    if (scala)
+                        out.tab(1).println("val %s = %s", schemaId, schemaFullId);
+                    else
+                        out.tab(1).println("public final %s %s = %s;", schemaClassName, schemaId, schemaFullId);
+                }
             }
         }
 
@@ -3552,7 +3620,7 @@ public class JavaGenerator extends AbstractGenerator {
             out.tab(1).println("}");
         }
 
-        printReferences(out, database.getSchemata(catalog), Schema.class, false);
+        printReferences(out, schemas, Schema.class, false);
 
         generateCatalogClassFooter(catalog, out);
         out.println("}");
@@ -3608,7 +3676,7 @@ public class JavaGenerator extends AbstractGenerator {
             out.tab(1).javadoc("The reference instance of <code>%s</code>", schemaName);
             out.tab(1).println("public static final %s %s = new %s();", className, schemaId, className);
 
-            if (generateGlobalObjectReferences() && generateGlobalTableReferences()) {
+            if (generateGlobalTableReferences()) {
                 for (TableDefinition table : schema.getTables()) {
                     final String tableClassName = out.ref(getStrategy().getFullJavaClassName(table));
                     final String tableId = getStrategy().getJavaIdentifier(table);
@@ -3626,9 +3694,8 @@ public class JavaGenerator extends AbstractGenerator {
 
                     // [#3797] Table-valued functions generate two different literals in
                     // globalObjectReferences
-                    if (table.isTableValuedFunction()) {
+                    if (table.isTableValuedFunction())
                         printTableValuedFunction(out, table, getStrategy().getJavaIdentifier(table));
-                    }
                 }
             }
 
@@ -3650,12 +3717,14 @@ public class JavaGenerator extends AbstractGenerator {
         }
 
         // [#2255] Avoid referencing sequence literals, if they're not generated
-        if (generateGlobalObjectReferences() && generateGlobalSequenceReferences()) {
+        if (generateGlobalSequenceReferences())
             printReferences(out, database.getSequences(schema), Sequence.class, true);
-        }
 
-        printReferences(out, database.getTables(schema), Table.class, true);
-        printReferences(out, database.getUDTs(schema), UDT.class, true);
+        if (generateGlobalTableReferences())
+            printReferences(out, database.getTables(schema), Table.class, true);
+
+        if (generateGlobalUDTReferences())
+            printReferences(out, database.getUDTs(schema), UDT.class, true);
 
         generateSchemaClassFooter(schema, out);
         out.println("}");
@@ -3745,7 +3814,7 @@ public class JavaGenerator extends AbstractGenerator {
                 out.println();
 
                 if (scala) {
-                    out.tab(1).println("private def get%ss%s() : %s[%s%s] = {", type.getSimpleName(), i / INITIALISER_SIZE, List.class, type, generic);
+                    out.tab(1).println("private def get%ss%s(): %s[%s%s] = {", type.getSimpleName(), i / INITIALISER_SIZE, List.class, type, generic);
                     out.tab(2).println("return %s.asList[%s%s]([[before=\n\t\t\t][separator=,\n\t\t\t][%s]])", Arrays.class, type, generic, references.subList(i, Math.min(i + INITIALISER_SIZE, references.size())));
                     out.tab(1).println("}");
                 }

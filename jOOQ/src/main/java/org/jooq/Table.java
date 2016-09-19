@@ -67,6 +67,8 @@ import static org.jooq.SQLDialect.SQLITE;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
@@ -78,6 +80,11 @@ import org.jooq.impl.DSL;
  * @author Lukas Eder
  */
 public interface Table<R extends Record> extends TableLike<R> {
+
+    /**
+     * Get the table catalog.
+     */
+    Catalog getCatalog();
 
     /**
      * Get the table schema.
@@ -287,7 +294,7 @@ public interface Table<R extends Record> extends TableLike<R> {
     Table<R> as(String alias);
 
     /**
-     * Create an alias for this table and its fields
+     * Create an alias for this table and its fields.
      * <p>
      * Note that the case-sensitivity of the returned table and columns depends
      * on {@link Settings#getRenderNameStyle()}. By default, table aliases are
@@ -339,6 +346,110 @@ public interface Table<R extends Record> extends TableLike<R> {
      */
     @Support
     Table<R> as(String alias, String... fieldAliases);
+
+
+    /**
+     * Create an alias for this table and its fields.
+     * <p>
+     * This works like {@link #as(String, String...)}, except that field aliases
+     * are provided by a function. This is useful, for instance, to prefix all
+     * columns with a common prefix:
+     * <p>
+     * <code><pre>
+     * MY_TABLE.as("t1", f -> "prefix_" + f.getName());
+     * </pre></code>
+     *
+     * @param alias The alias name
+     * @param aliasFunction The function providing field aliases.
+     * @return The table alias
+     */
+    @Support
+    Table<R> as(String alias, Function<? super Field<?>, ? extends String> aliasFunction);
+
+    /**
+     * Create an alias for this table and its fields.
+     * <p>
+     * This works like {@link #as(String, String...)}, except that field aliases
+     * are provided by a function. This is useful, for instance, to prefix all
+     * columns with a common prefix:
+     * <p>
+     * <code><pre>
+     * MY_TABLE.as("t1", (f, i) -> "column" + i);
+     * </pre></code>
+     *
+     * @param alias The alias name
+     * @param aliasFunction The function providing field aliases.
+     * @return The table alias
+     */
+    @Support
+    Table<R> as(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> aliasFunction);
+
+
+    /**
+     * Create an alias for this table based on another table's name.
+     * <p>
+     * Note that the case-sensitivity of the returned table depends on
+     * {@link Settings#getRenderNameStyle()}. By default, table aliases are
+     * quoted, and thus case-sensitive!
+     *
+     * @param otherTable The other table whose name this table is aliased with.
+     * @return The table alias.
+     */
+    @Support
+    Table<R> as(Table<?> otherTable);
+
+    /**
+     * Create an alias for this table based on another table's name.
+     * <p>
+     * Note that the case-sensitivity of the returned table depends on
+     * {@link Settings#getRenderNameStyle()}. By default, table aliases are
+     * quoted, and thus case-sensitive!
+     *
+     * @param otherTable The other table whose name this table is aliased with.
+     * @param otherFields The other fields whose field name this table's fields
+     *            are aliased with.
+     * @return The table alias.
+     */
+    @Support
+    Table<R> as(Table<?> otherTable, Field<?>... otherFields);
+
+
+    /**
+     * Create an alias for this table and its fields.
+     * <p>
+     * This works like {@link #as(String, String...)}, except that field aliases
+     * are provided by a function. This is useful, for instance, to prefix all
+     * columns with a common prefix:
+     * <p>
+     * <code><pre>
+     * MY_TABLE.as(MY_OTHER_TABLE, f -> MY_OTHER_TABLE.field(f));
+     * </pre></code>
+     *
+     * @param alias The alias name
+     * @param aliasFunction The function providing field aliases.
+     * @return The table alias
+     */
+    @Support
+    Table<R> as(Table<?> otherTable, Function<? super Field<?>, ? extends Field<?>> aliasFunction);
+
+    /**
+     * Create an alias for this table and its fields.
+     * <p>
+     * This works like {@link #as(String, String...)}, except that field aliases
+     * are provided by a function. This is useful, for instance, to prefix all
+     * columns with a common prefix:
+     * <p>
+     * <code><pre>
+     * MY_TABLE.as("t1", (f, i) -> "column" + i);
+     * </pre></code>
+     *
+     * @param alias The alias name
+     * @param aliasFunction The function providing field aliases.
+     * @return The table alias
+     */
+    @Support
+    Table<R> as(Table<?> otherTable, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> aliasFunction);
+
 
     // -------------------------------------------------------------------------
     // XXX: JOIN clauses on tables
@@ -413,6 +524,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see #innerJoin(String, Object...)
      * @see SQL
      */
@@ -431,6 +543,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see #innerJoin(String, QueryPart...)
      * @see SQL
      */
@@ -495,6 +608,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support
@@ -510,6 +624,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support
@@ -581,6 +696,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see #leftOuterJoin(String, Object...)
      * @see SQL
      */
@@ -599,6 +715,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see #leftOuterJoin(String, QueryPart...)
      * @see SQL
      */
@@ -662,6 +779,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support
@@ -677,6 +795,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support
@@ -757,6 +876,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see #rightOuterJoin(String, Object...)
      * @see SQL
      */
@@ -777,6 +897,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see #rightOuterJoin(String, QueryPart...)
      * @see SQL
      */
@@ -850,6 +971,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
@@ -867,6 +989,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
@@ -936,6 +1059,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ FIREBIRD, HSQLDB, POSTGRES })
@@ -953,6 +1077,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ FIREBIRD, HSQLDB, POSTGRES })
@@ -1042,6 +1167,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -1064,6 +1190,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -1142,6 +1269,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support
@@ -1171,6 +1299,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support
@@ -1234,6 +1363,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support
@@ -1252,6 +1382,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support
@@ -1327,6 +1458,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
@@ -1345,6 +1477,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
@@ -1411,6 +1544,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ POSTGRES_9_3 })
@@ -1426,6 +1560,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ POSTGRES_9_3 })
@@ -1485,6 +1620,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ POSTGRES_9_3 })
@@ -1500,6 +1636,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ POSTGRES_9_3 })
@@ -1559,6 +1696,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, Object...)
+     * @see DSL#sql(String, Object...)
      * @see SQL
      */
     @Support({ MYSQL })
@@ -1574,6 +1712,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * escape literals when concatenated into SQL clauses!
      *
      * @see DSL#table(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
      * @see SQL
      */
     @Support({ MYSQL })
@@ -2118,4 +2257,23 @@ public interface Table<R extends Record> extends TableLike<R> {
 
 
 
+
+    // ------------------------------------------------------------------------
+    // [#5518] Record method inversions, e.g. for use as method references
+    // ------------------------------------------------------------------------
+
+    /**
+     * The inverse operation of {@link Record#into(Table)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .map(MY_TABLE::into)
+     *    .forEach(System.out::println);
+     * </pre></code>
+     */
+    R from(Record record);
 }

@@ -77,6 +77,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
@@ -94,6 +96,7 @@ import org.jooq.impl.ThreadLocalTransactionProvider;
 import org.jooq.tools.jdbc.MockCallable;
 import org.jooq.tools.jdbc.MockDataProvider;
 import org.jooq.tools.jdbc.MockRunnable;
+import org.jooq.util.xml.jaxb.InformationSchema;
 
 /**
  * A contextual DSL providing "attached" implementations to the
@@ -200,6 +203,65 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * connection's database meta data.
      */
     Meta meta();
+
+    /**
+     * Access the databse meta data from its serialised form.
+     */
+    Meta meta(InformationSchema schema);
+
+    /**
+     * Export a catalog to the {@link InformationSchema} format.
+     * <p>
+     * This allows for serialising schema meta information as XML using JAXB.
+     * See also {@link Constants#XSD_META} for details.
+     */
+    InformationSchema informationSchema(Catalog catalog);
+
+    /**
+     * Export a set of catalogs to the {@link InformationSchema} format.
+     * <p>
+     * This allows for serialising schema meta information as XML using JAXB.
+     * See also {@link Constants#XSD_META} for details.
+     */
+    InformationSchema informationSchema(Catalog... catalogs);
+
+    /**
+     * Export a schema to the {@link InformationSchema} format.
+     * <p>
+     * This allows for serialising schema meta information as XML using JAXB.
+     * See also {@link Constants#XSD_META} for details.
+     */
+    InformationSchema informationSchema(Schema schema);
+
+    /**
+     * Export a set of schemas to the {@link InformationSchema} format.
+     * <p>
+     * This allows for serialising schema meta information as XML using JAXB.
+     * See also {@link Constants#XSD_META} for details.
+     */
+    InformationSchema informationSchema(Schema... schemas);
+
+    /**
+     * Export a table to the {@link InformationSchema} format.
+     * <p>
+     * Exporting a single table will not include any foreign key definitions in
+     * the exported data.
+     * <p>
+     * This allows for serialising schema meta information as XML using JAXB.
+     * See also {@link Constants#XSD_META} for details.
+     */
+    InformationSchema informationSchema(Table<?> table);
+
+    /**
+     * Export a set of tables to the {@link InformationSchema} format.
+     * <p>
+     * Only those foreign keys whose referenced table is also included in the
+     * export will be exported.
+     * <p>
+     * This allows for serialising schema meta information as XML using JAXB.
+     * See also {@link Constants#XSD_META} for details.
+     */
+    InformationSchema informationSchema(Table<?>... table);
 
     // -------------------------------------------------------------------------
     // XXX APIs for creating scope for transactions, mocking, batching, etc.
@@ -572,6 +634,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @param bindings The bindings
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -603,6 +666,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *            {numbered placeholder} locations
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -687,6 +751,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The results from the executed query. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -720,6 +785,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *         <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -820,6 +886,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The cursor. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -858,6 +925,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The cursor. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -954,6 +1022,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The completion stage. The completed result will never be
      *         <code>null</code>.
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -990,6 +1059,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The completion stage. The completed result will never be
      *         <code>null</code>.
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1075,6 +1145,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The completion stage. The completed result will never be
      *         <code>null</code>.
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1108,6 +1179,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The completion stage. The completed result will never be
      *         <code>null</code>.
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1214,6 +1286,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *         {@link ResultSet}
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1254,6 +1327,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *         {@link ResultSet}
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1328,6 +1402,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The results. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1361,6 +1436,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The results. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1446,6 +1522,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws DataAccessException if something went wrong executing the query
      * @throws TooManyRowsException if the query returned more than one record
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1479,6 +1556,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws DataAccessException if something went wrong executing the query
      * @throws TooManyRowsException if the query returned more than one record
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1565,6 +1643,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws DataAccessException if something went wrong executing the query
      * @throws TooManyRowsException if the query returned more than one record
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1598,6 +1677,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws DataAccessException if something went wrong executing the query
      * @throws TooManyRowsException if the query returned more than one record
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1690,6 +1770,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws InvalidResultException if the query returned a record with more
      *             than one value
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1725,6 +1806,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws InvalidResultException if the query returned a record with more
      *             than one value
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1817,6 +1899,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws InvalidResultException if the query returned a record with more
      *             than one value
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1852,6 +1935,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @throws InvalidResultException if the query returned a record with more
      *             than one value
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -1935,6 +2019,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The values. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -1967,6 +2052,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The values. This will never be <code>null</code>.
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -2022,6 +2108,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The results from the executed query
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -2054,6 +2141,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @return The results from the executed query
      * @throws DataAccessException if something went wrong executing the query
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -2194,6 +2282,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * @param bindings The bindings
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, Object...)
      */
     @Support
     @PlainSQL
@@ -2225,6 +2314,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *            {numbered placeholder} locations
      * @return A query wrapping the plain SQL
      * @see SQL
+     * @see DSL#sql(String, QueryPart...)
      */
     @Support
     @PlainSQL
@@ -3288,6 +3378,46 @@ public interface DSLContext extends Scope , AutoCloseable  {
     @Support({ FIREBIRD, HSQLDB, POSTGRES })
     WithAsStep with(String alias, String... fieldAliases);
 
+
+    /**
+     * Create a <code>WITH</code> clause to supply subsequent
+     * <code>SELECT</code>, <code>UPDATE</code>, <code>INSERT</code>,
+     * <code>DELETE</code>, and <code>MERGE</code> statements with
+     * {@link CommonTableExpression}s.
+     * <p>
+     * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
+     * databases, in case of which it will not be rendered. For optimal database
+     * interoperability and readability, however, it is suggested that you use
+     * {@link #with(String, String...)} for strictly non-recursive CTE and
+     * {@link #withRecursive(String, String...)} for strictly recursive CTE.
+     * <p>
+     * This works in a similar way as {@link #with(String, String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns as input.
+     */
+    @Support({ FIREBIRD, HSQLDB, POSTGRES })
+    WithAsStep with(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction);
+
+    /**
+     * Create a <code>WITH</code> clause to supply subsequent
+     * <code>SELECT</code>, <code>UPDATE</code>, <code>INSERT</code>,
+     * <code>DELETE</code>, and <code>MERGE</code> statements with
+     * {@link CommonTableExpression}s.
+     * <p>
+     * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
+     * databases, in case of which it will not be rendered. For optimal database
+     * interoperability and readability, however, it is suggested that you use
+     * {@link #with(String, String...)} for strictly non-recursive CTE and
+     * {@link #withRecursive(String, String...)} for strictly recursive CTE.
+     * <p>
+     * This works in a similar way as {@link #with(String, String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns and their column indexes as input.
+     */
+    @Support({ FIREBIRD, HSQLDB, POSTGRES })
+    WithAsStep with(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
+
+
     // [jooq-tools] START [with]
 
     /**
@@ -3727,6 +3857,54 @@ public interface DSLContext extends Scope , AutoCloseable  {
      */
     @Support({ FIREBIRD, H2, HSQLDB, POSTGRES })
     WithAsStep withRecursive(String alias, String... fieldAliases);
+
+
+    /**
+     * Create a <code>WITH</code> clause to supply subsequent
+     * <code>SELECT</code>, <code>UPDATE</code>, <code>INSERT</code>,
+     * <code>DELETE</code>, and <code>MERGE</code> statements with
+     * {@link CommonTableExpression}s.
+     * <p>
+     * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
+     * databases, in case of which it will not be rendered. For optimal database
+     * interoperability and readability, however, it is suggested that you use
+     * {@link #with(String, String...)} for strictly non-recursive CTE
+     * and {@link #withRecursive(String, String...)} for strictly
+     * recursive CTE.
+     * <p>
+     * Note that the {@link SQLDialect#H2} database only supports single-table,
+     * <code>RECURSIVE</code> common table expression lists.
+     * <p>
+     * This works in a similar way as {@link #with(String, String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns as input.
+     */
+    @Support({ FIREBIRD, HSQLDB, POSTGRES })
+    WithAsStep withRecursive(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction);
+
+    /**
+     * Create a <code>WITH</code> clause to supply subsequent
+     * <code>SELECT</code>, <code>UPDATE</code>, <code>INSERT</code>,
+     * <code>DELETE</code>, and <code>MERGE</code> statements with
+     * {@link CommonTableExpression}s.
+     * <p>
+     * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
+     * databases, in case of which it will not be rendered. For optimal database
+     * interoperability and readability, however, it is suggested that you use
+     * {@link #with(String, String...)} for strictly non-recursive CTE
+     * and {@link #withRecursive(String, String...)} for strictly
+     * recursive CTE.
+     * <p>
+     * Note that the {@link SQLDialect#H2} database only supports single-table,
+     * <code>RECURSIVE</code> common table expression lists.
+     * <p>
+     * This works in a similar way as {@link #with(String, String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns and their column indexes as input.
+     */
+    @Support({ FIREBIRD, HSQLDB, POSTGRES })
+    WithAsStep withRecursive(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
+
 
     // [jooq-tools] START [with-recursive]
 
@@ -4227,6 +4405,9 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT *</code> semantics.
      *
      * @see DSL#select(Collection)
      */
@@ -4252,6 +4433,9 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *       .orderBy(field2)
      *       .execute();
      * </pre></code>
+     * <p>
+     * Note that passing an empty array (e.g. by not passing any vararg
+     * argument) conveniently produces <code>SELECT *</code> semantics.
      *
      * @see DSL#select(Field...)
      */
@@ -4940,6 +5124,9 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT DISTINCT *</code> semantics.
      *
      * @see DSL#selectDistinct(Collection)
      */
@@ -4964,6 +5151,9 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
      * </pre></code>
+     * <p>
+     * Note that passing an empty array (e.g. by not passing any vararg
+     * argument) conveniently produces <code>SELECT DISTINCT *</code> semantics.
      *
      * @see DSL#selectDistinct(Field...)
      */
@@ -6911,6 +7101,34 @@ public interface DSLContext extends Scope , AutoCloseable  {
     // -------------------------------------------------------------------------
 
     /**
+     * Generate the complete creation script for the entire catalog.
+     *
+     * @see #ddl(Catalog, DDLFlag...)
+     */
+    Queries ddl(Catalog catalog);
+
+    /**
+     * Generate a partial creation script for the entire catalog.
+     * <p>
+     * The following {@link DDLFlag} can be set:
+     * <ul>
+     * <li>{@link DDLFlag#SCHEMA}: If set, the catalog's <code>SCHEMA</code>
+     * specification will be generated.</li>
+     * <li>{@link DDLFlag#TABLE}: If set, the schema's <code>TABLE</code>
+     * specification will be generated.</li>
+     * <li>{@link DDLFlag#PRIMARY_KEY}: If set, a potential
+     * <code>PRIMARY KEY</code> constraint is specified inline with the table.
+     * </li>
+     * <li>{@link DDLFlag#UNIQUE}: If set, any potential <code>UNIQUE</code>
+     * constraint is specified inline with the table.</li>
+     * <li>{@link DDLFlag#FOREIGN_KEY}: If set, any potential
+     * <code>FOREIGN KEY</code> constraint is specified after all the tables, as
+     * a separate <code>ALTER TABLE .. ADD CONSTRAINT</code> statement.</li>
+     * </ul>
+     */
+    Queries ddl(Catalog schema, DDLFlag... flags);
+
+    /**
      * Generate the complete creation script for the entire schema.
      *
      * @see #ddl(Schema, DDLFlag...)
@@ -7134,6 +7352,80 @@ public interface DSLContext extends Scope , AutoCloseable  {
     @Support
     CreateViewAsStep<Record> createView(Table<?> view, Field<?>... fields);
 
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(String, String...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createView(String, String...)
+     */
+    @Support
+    CreateViewAsStep<Record> createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(String, String...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createView(String, String...)
+     */
+    @Support
+    CreateViewAsStep<Record> createView(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Name, Name...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createView(String, String...)
+     */
+    @Support
+    CreateViewAsStep<Record> createView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Name, Name...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createView(String, String...)
+     */
+    @Support
+    CreateViewAsStep<Record> createView(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createView(String, String...)
+     */
+    @Support
+    CreateViewAsStep<Record> createView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createView(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createView(String, String...)
+     */
+    @Support
+    CreateViewAsStep<Record> createView(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction);
+
+
     /**
      * Create a new DSL <code>CREATE VIEW</code> statement.
      *
@@ -7157,6 +7449,80 @@ public interface DSLContext extends Scope , AutoCloseable  {
      */
     @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields);
+
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(String, String...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    CreateViewAsStep<Record> createViewIfNotExists(String view, Function<? super Field<?>, ? extends String> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(String, String...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    CreateViewAsStep<Record> createViewIfNotExists(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(Name, Name...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    CreateViewAsStep<Record> createViewIfNotExists(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(Name, Name...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    CreateViewAsStep<Record> createViewIfNotExists(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     * <p>
+     * This works like {@link #createViewIfNotExists(Table, Field...)} except that the
+     * view's field names are derived from the view's {@link Select} statement
+     * using a function.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction);
+
 
     /**
      * Create a new DSL <code>CREATE INDEX</code> statement.

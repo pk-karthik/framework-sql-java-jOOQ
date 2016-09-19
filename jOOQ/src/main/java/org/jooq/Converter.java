@@ -41,6 +41,7 @@
 package org.jooq;
 
 import java.io.Serializable;
+import java.util.function.Function;
 
 import org.jooq.impl.SQLDataType;
 
@@ -122,6 +123,95 @@ public interface Converter<T, U> extends Serializable {
      */
     default <X> Converter<T, X> andThen(Converter<? super U, X> converter) {
         return Converters.of(this, converter);
+    }
+
+    /**
+     * Construct a new converter from functions.
+     *
+     * @param <T> the database type
+     * @param <U> the user type
+     * @param fromType The database type
+     * @param toType The user type
+     * @param from A function converting from T to U
+     * @param to A function converting from U to T
+     * @return The converter.
+     * @see Converter
+     */
+    static <T, U> Converter<T, U> of(
+        Class<T> fromType,
+        Class<U> toType,
+        Function<? super T, ? extends U> from,
+        Function<? super U, ? extends T> to
+    ) {
+        return new Converter<T, U>() {
+
+            /**
+             * Generated UID
+             */
+            private static final long serialVersionUID = 8782437631959970693L;
+
+            @Override
+            public final U from(T t) {
+                return from.apply(t);
+            }
+
+            @Override
+            public final T to(U u) {
+                return to.apply(u);
+            }
+
+            @Override
+            public final Class<T> fromType() {
+                return fromType;
+            }
+
+            @Override
+            public final Class<U> toType() {
+                return toType;
+            }
+        };
+    }
+
+    /**
+     * Construct a new converter from functions.
+     * <p>
+     * This works like {@link Converter#of(Class, Class, Function, Function)},
+     * except that both conversion {@link Function}s are decorated with a
+     * function that always returns <code>null</code> for <code>null</code>
+     * inputs.
+     * <p>
+     * Example:
+     * <p>
+     * <code><pre>
+     * Converter<String, Integer> converter =
+     *   Converter.ofNullable(String.class, Integer.class, Integer::parseInt, Object::toString);
+     *
+     * // No exceptions thrown
+     * assertNull(converter.from(null));
+     * assertNull(converter.to(null));
+     * </pre></code>
+     *
+     * @param <T> the database type
+     * @param <U> the user type
+     * @param fromType The database type
+     * @param toType The user type
+     * @param from A function converting from T to U
+     * @param to A function converting from U to T
+     * @return The converter.
+     * @see Converter
+     */
+    static <T, U> Converter<T, U> ofNullable(
+        Class<T> fromType,
+        Class<U> toType,
+        Function<? super T, ? extends U> from,
+        Function<? super U, ? extends T> to
+    ) {
+        return of(
+            fromType,
+            toType,
+            t -> t == null ? null : from.apply(t),
+            u -> u == null ? null : to.apply(u)
+        );
     }
 
 

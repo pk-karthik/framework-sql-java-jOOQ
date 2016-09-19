@@ -64,8 +64,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.jooq.Binding;
+import org.jooq.Catalog;
 import org.jooq.Clause;
 import org.jooq.Comparator;
 import org.jooq.Condition;
@@ -136,6 +140,15 @@ abstract class AbstractTable<R extends Record> extends AbstractQueryPart impleme
     @Override
     public Clause[] clauses(Context<?> ctx) {
         return CLAUSES;
+    }
+
+    // ------------------------------------------------------------------------
+    // [#5518] Record method inversions, e.g. for use as method references
+    // ------------------------------------------------------------------------
+
+    @Override
+    public final R from(Record record) {
+        return record.into(this);
     }
 
     // ------------------------------------------------------------------------
@@ -265,9 +278,40 @@ abstract class AbstractTable<R extends Record> extends AbstractQueryPart impleme
         return as(alias, fieldAliases);
     }
 
+
+    @Override
+    public final Table<R> asTable(String alias, Function<? super Field<?>, ? extends String> aliasFunction) {
+        return as(alias, aliasFunction);
+    }
+
+    @Override
+    public final Table<R> asTable(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> aliasFunction) {
+        return as(alias, aliasFunction);
+    }
+
+    @Override
+    public final Table<R> as(String alias, Function<? super Field<?>, ? extends String> aliasFunction) {
+        return as(alias, Stream.of(fields()).map(aliasFunction).toArray(String[]::new));
+    }
+
+    @Override
+    public final Table<R> as(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> aliasFunction) {
+        Field<?>[] fields = fields();
+        String[] names = new String[fields.length];
+        for (int i = 0; i < fields.length; i++)
+            names[i] = aliasFunction.apply(fields[i], i);
+        return as(alias, names);
+    }
+
+
     // ------------------------------------------------------------------------
     // XXX: Table API
     // ------------------------------------------------------------------------
+
+    @Override
+    public final Catalog getCatalog() {
+        return getSchema() == null ? null : getSchema().getCatalog();
+    }
 
     @Override
     public /* non-final */ Schema getSchema() {
@@ -599,6 +643,32 @@ abstract class AbstractTable<R extends Record> extends AbstractQueryPart impleme
     public final Table<R> forceIndexForGroupBy(String... indexes) {
         return new HintedTable<R>(this, "force index for group by", indexes);
     }
+
+    // ------------------------------------------------------------------------
+    // XXX: aliasing API
+    // ------------------------------------------------------------------------
+
+    @Override
+    public final Table<R> as(Table<?> otherTable) {
+        return as(otherTable.getName());
+    }
+
+    @Override
+    public final Table<R> as(Table<?> otherTable, Field<?>... otherFields) {
+        return as(otherTable.getName(), Tools.fieldNames(otherFields));
+    }
+
+
+    @Override
+    public final Table<R> as(Table<?> otherTable, Function<? super Field<?>, ? extends Field<?>> aliasFunction) {
+        return as(otherTable.getName(), f -> aliasFunction.apply(f).getName());
+    }
+
+    @Override
+    public final Table<R> as(Table<?> otherTable, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> aliasFunction) {
+        return as(otherTable.getName(), (f, i) -> aliasFunction.apply(f, i).getName());
+    }
+
 
 
 

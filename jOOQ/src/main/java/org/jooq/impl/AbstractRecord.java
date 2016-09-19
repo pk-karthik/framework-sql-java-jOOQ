@@ -63,6 +63,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.Stream;
 
 import org.jooq.Attachable;
 import org.jooq.Converter;
@@ -348,6 +350,18 @@ abstract class AbstractRecord extends AbstractStore implements Record {
         set(field, converter.to(value));
     }
 
+    @Override
+    public /* non-final */ <T> Record with(Field<T> field, T value) {
+        set(field, value);
+        return this;
+    }
+
+    @Override
+    public <T, U> Record with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
+        set(field, value, converter);
+        return this;
+    }
+
     final void setValues(Field<?>[] fields, AbstractRecord record) {
         fetched = record.fetched;
 
@@ -527,6 +541,13 @@ abstract class AbstractRecord extends AbstractStore implements Record {
         return Arrays.asList(intoArray());
     }
 
+
+    @Override
+    public final Stream<Object> intoStream() {
+        return into(Stream.class);
+    }
+
+
     @Override
     public final Map<String, Object> intoMap() {
         Map<String, Object> map = new LinkedHashMap<String, Object>();
@@ -549,6 +570,7 @@ abstract class AbstractRecord extends AbstractStore implements Record {
     }
 
     // [jooq-tools] START [into-fields]
+
     @Override
     public final <T1> Record1<T1> into(Field<T1> field1) {
         return (Record1) into(new Field[] { field1 });
@@ -1137,13 +1159,13 @@ abstract class AbstractRecord extends AbstractStore implements Record {
     }
 
     @Override
-    public final <T, U> U getValue(Field<T> field, Converter<? super T, U> converter) {
+    public final <T, U> U getValue(Field<T> field, Converter<? super T, ? extends U> converter) {
         return get(field, converter);
     }
 
     @Override
     @Deprecated
-    public final <T, U> U getValue(Field<T> field, Converter<? super T, U> converter, U defaultValue) {
+    public final <T, U> U getValue(Field<T> field, Converter<? super T, ? extends U> converter, U defaultValue) {
         final U result = get(field, converter);
         return result == null ? defaultValue : result;
     }
@@ -1173,13 +1195,13 @@ abstract class AbstractRecord extends AbstractStore implements Record {
     }
 
     @Override
-    public final <U> U getValue(int index, Converter<?, U> converter) {
+    public final <U> U getValue(int index, Converter<?, ? extends U> converter) {
         return get(index, converter);
     }
 
     @Override
     @Deprecated
-    public final <U> U getValue(int index, Converter<?, U> converter, U defaultValue) {
+    public final <U> U getValue(int index, Converter<?, ? extends U> converter, U defaultValue) {
         final U result = get(index, converter);
         return result == null ? defaultValue : result;
     }
@@ -1208,13 +1230,13 @@ abstract class AbstractRecord extends AbstractStore implements Record {
     }
 
     @Override
-    public final <U> U getValue(String fieldName, Converter<?, U> converter) {
+    public final <U> U getValue(String fieldName, Converter<?, ? extends U> converter) {
         return get(fieldName, converter);
     }
 
     @Override
     @Deprecated
-    public final <U> U getValue(String fieldName, Converter<?, U> converter, U defaultValue) {
+    public final <U> U getValue(String fieldName, Converter<?, ? extends U> converter, U defaultValue) {
         final U result = get(fieldName, converter);
         return result == null ? defaultValue : result;
     }
@@ -1230,7 +1252,7 @@ abstract class AbstractRecord extends AbstractStore implements Record {
     }
 
     @Override
-    public final <U> U getValue(Name fieldName, Converter<?, U> converter) {
+    public final <U> U getValue(Name fieldName, Converter<?, ? extends U> converter) {
         return get(fieldName, converter);
     }
 
@@ -1240,7 +1262,7 @@ abstract class AbstractRecord extends AbstractStore implements Record {
     }
 
     @Override
-    public final <T, U> void setValue(Field<T> field, U value, Converter<T, ? super U> converter) {
+    public final <T, U> void setValue(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
         set(field, value, converter);
     }
 

@@ -78,6 +78,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
@@ -92,6 +94,7 @@ import org.jooq.Attachable;
 import org.jooq.Batch;
 import org.jooq.BatchBindStep;
 import org.jooq.BindContext;
+import org.jooq.Catalog;
 import org.jooq.CommonTableExpression;
 import org.jooq.Condition;
 import org.jooq.Configuration;
@@ -261,6 +264,7 @@ import org.jooq.tools.jdbc.MockCallable;
 import org.jooq.tools.jdbc.MockConfiguration;
 import org.jooq.tools.jdbc.MockDataProvider;
 import org.jooq.tools.jdbc.MockRunnable;
+import org.jooq.util.xml.jaxb.InformationSchema;
 
 /**
  * A default implementation for {@link DSLContext}.
@@ -369,6 +373,46 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Override
     public Meta meta() {
         return new MetaImpl(configuration());
+    }
+
+    @Override
+    public Meta meta(InformationSchema schema) {
+        return new InformationSchemaMetaImpl(configuration(), schema);
+    }
+
+    @Override
+    public InformationSchema informationSchema(Catalog catalog) {
+        return InformationSchemaExport.exportSchemas(configuration(), catalog.getSchemas());
+    }
+
+    @Override
+    public InformationSchema informationSchema(Catalog... catalogs) {
+        List<Schema> schemas = new ArrayList<Schema>();
+
+        for (Catalog catalog : catalogs)
+            schemas.addAll(catalog.getSchemas());
+
+        return InformationSchemaExport.exportSchemas(configuration(), schemas);
+    }
+
+    @Override
+    public InformationSchema informationSchema(Schema schema) {
+        return InformationSchemaExport.exportSchemas(configuration(), Arrays.asList(schema));
+    }
+
+    @Override
+    public InformationSchema informationSchema(Schema... schemas) {
+        return InformationSchemaExport.exportSchemas(configuration(), Arrays.asList(schemas));
+    }
+
+    @Override
+    public InformationSchema informationSchema(Table<?> table) {
+        return InformationSchemaExport.exportTables(configuration(), Arrays.asList(table));
+    }
+
+    @Override
+    public InformationSchema informationSchema(Table<?>... tables) {
+        return InformationSchemaExport.exportTables(configuration(), Arrays.asList(tables));
     }
 
     // -------------------------------------------------------------------------
@@ -1344,6 +1388,18 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         return new WithImpl(configuration(), false).with(alias, fieldAliases);
     }
 
+
+    @Override
+    public WithAsStep with(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return new WithImpl(configuration(), false).with(alias, fieldNameFunction);
+    }
+
+    @Override
+    public WithAsStep with(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction) {
+        return new WithImpl(configuration(), false).with(alias, fieldNameFunction);
+    }
+
+
     // [jooq-tools] START [with]
 
     @Generated("This method was generated using jOOQ-tools")
@@ -1494,6 +1550,18 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     public WithAsStep withRecursive(String alias, String... fieldAliases) {
         return new WithImpl(configuration(), true).with(alias, fieldAliases);
     }
+
+
+    @Override
+    public WithAsStep withRecursive(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return new WithImpl(configuration(), true).with(alias, fieldNameFunction);
+    }
+
+    @Override
+    public WithAsStep withRecursive(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction) {
+        return new WithImpl(configuration(), true).with(alias, fieldNameFunction);
+    }
+
 
     // [jooq-tools] START [with-recursive]
 
@@ -2401,6 +2469,16 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     // -------------------------------------------------------------------------
 
     @Override
+    public Queries ddl(Catalog catalog) {
+        return ddl(catalog, DDLFlag.values());
+    }
+
+    @Override
+    public Queries ddl(Catalog schema, DDLFlag... flags) {
+        return new DDL(this, flags).queries(schema);
+    }
+
+    @Override
     public Queries ddl(Schema schema) {
         return ddl(schema, DDLFlag.values());
     }
@@ -2439,6 +2517,38 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         return new CreateViewImpl<Record>(configuration(), view, fields, false);
     }
 
+
+    @Override
+    public CreateViewAsStep<Record> createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return createView(table(name(view)), (f, i) -> field(name(fieldNameFunction.apply(f))));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction) {
+        return createView(table(name(view)), (f, i) -> field(name(fieldNameFunction.apply(f, i))));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+        return createView(table(view), (f, i) -> field(fieldNameFunction.apply(f)));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction) {
+        return createView(table(view), (f, i) -> field(fieldNameFunction.apply(f, i)));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+        return createView(view, (f, i) -> fieldNameFunction.apply(f));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction) {
+        return new CreateViewImpl<Record>(configuration(), view, fieldNameFunction, false);
+    }
+
+
     @Override
     public CreateViewAsStep<Record> createViewIfNotExists(String view, String... fields) {
         return createViewIfNotExists(table(name(view)), Tools.fieldsByName(view, fields));
@@ -2453,6 +2563,38 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     public CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields) {
         return new CreateViewImpl<Record>(configuration(), view, fields, true);
     }
+
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return createViewIfNotExists(table(name(view)), (f, i) -> field(name(fieldNameFunction.apply(f))));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction) {
+        return createViewIfNotExists(table(name(view)), (f, i) -> field(name(fieldNameFunction.apply(f, i))));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+        return createViewIfNotExists(table(view), (f, i) -> field(fieldNameFunction.apply(f)));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction) {
+        return createViewIfNotExists(table(view), (f, i) -> field(fieldNameFunction.apply(f, i)));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+        return createViewIfNotExists(view, (f, i) -> fieldNameFunction.apply(f));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction) {
+        return new CreateViewImpl<Record>(configuration(), view, fieldNameFunction, true);
+    }
+
 
     @Override
     public CreateSchemaFinalStep createSchema(String schema) {

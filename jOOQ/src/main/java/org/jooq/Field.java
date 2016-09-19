@@ -66,6 +66,7 @@ import static org.jooq.SQLDialect.SQLITE;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
@@ -171,6 +172,32 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      */
     @Support
     Field<T> as(Field<?> otherField);
+
+
+    /**
+     * Create an alias for this field.
+     * <p>
+     * Note that the case-sensitivity of the returned field depends on
+     * {@link Settings#getRenderNameStyle()}. By default, field aliases are
+     * quoted, and thus case-sensitive!
+     * <p>
+     * This works like {@link #as(String)}, except that field aliases are
+     * provided by a function. This is useful, for instance, to prefix all
+     * columns with a common prefix (on {@link Table#as(String, Function)}):
+     * <p>
+     * <code><pre>
+     * MY_TABLE.as("t1", f -> "prefix_" + f.getName());
+     * </pre></code>
+     * <p>
+     * And then to use the same function also for individual fields:
+     * <p>
+     * <code><pre>
+     * MY_TABLE.MY_COLUMN.as(f -> "prefix_" + f.getName());
+     * </pre></code>
+     */
+    @Support
+    Field<T> as(Function<? super Field<T>, ? extends String> aliasFunction);
+
 
     /**
      * {@inheritDoc}
@@ -3315,5 +3342,106 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
 
 
 
+
+    // ------------------------------------------------------------------------
+    // [#5518] Record method inversions, e.g. for use as method references
+    // ------------------------------------------------------------------------
+
+    /**
+     * The inverse operation of {@link Record#field(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream.
+     */
+    Field<T> field(Record record);
+
+    /**
+     * The inverse operation of {@link Record#get(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .map(MY_TABLE.ID::get)
+     *    .forEach(System.out::println);
+     * </pre></code>
+     */
+    T get(Record record);
+
+    /**
+     * The inverse operation of {@link Record#getValue(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .map(MY_TABLE.ID::getValue)
+     *    .forEach(System.out::println);
+     * </pre></code>
+     */
+    T getValue(Record record);
+
+    /**
+     * The inverse operation of {@link Record#original(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .map(MY_TABLE.ID::original)
+     *    .forEach(System.out::println);
+     * </pre></code>
+     */
+    T original(Record record);
+
+    /**
+     * The inverse operation of {@link Record#changed(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .map(MY_TABLE.ID::changed)
+     *    .forEach(System.out::println);
+     * </pre></code>
+     */
+    boolean changed(Record record);
+
+    /**
+     * The inverse operation of {@link Record#reset(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .forEach(MY_TABLE.ID::reset);
+     * </pre></code>
+     */
+    void reset(Record record);
+
+    /**
+     * The inverse operation of {@link Record#into(Field)}.
+     * <p>
+     * This method can be used in its method reference form conveniently on a
+     * generated table, for instance, when mapping records in a stream:
+     * <code><pre>
+     * DSL.using(configuration)
+     *    .fetch("select * from t")
+     *    .stream()
+     *    .map(MY_TABLE.ID::from)
+     *    .forEach(System.out::println);
+     * </pre></code>
+     */
+    Record1<T> from(Record record);
 
 }

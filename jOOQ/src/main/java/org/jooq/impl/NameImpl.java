@@ -41,12 +41,15 @@
 package org.jooq.impl;
 
 import java.util.Arrays;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import javax.annotation.Generated;
 
 import org.jooq.Clause;
 import org.jooq.CommonTableExpression;
 import org.jooq.Context;
+import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Select;
@@ -119,6 +122,20 @@ final class NameImpl extends AbstractQueryPart implements Name {
 
         return new DerivedColumnListImpl(qualifiedName[0], fieldNames);
     }
+
+
+
+    @Override
+    public final DerivedColumnListImpl fields(Function<? super Field<?>, ? extends String> fieldNameFunction) {
+        return fields((f, i) -> fieldNameFunction.apply(f));
+    }
+
+    @Override
+    public final DerivedColumnListImpl fields(BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction) {
+        return new DerivedColumnListImpl(qualifiedName[0], fieldNameFunction);
+    }
+
+
 
     // [jooq-tools] START [fields]
 

@@ -43,6 +43,7 @@ package org.jooq.impl;
 import static java.util.Arrays.asList;
 // ...
 // ...
+import static org.jooq.SQLDialect.HSQLDB;
 // ...
 // ...
 // ...
@@ -149,6 +150,13 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractQuery {
     public final void accept(Context<?> ctx) {
         if (with != null)
             ctx.visit(with).formatSeparator();
+
+
+
+
+
+
+
 
 
 
@@ -461,6 +469,13 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractQuery {
 
 
 
+
+
+
+
+
+
+
                 case HSQLDB:
                 default: {
                     listener.executeStart(ctx);
@@ -484,7 +499,9 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractQuery {
                 returned = returned.into(table);
 
             // [#5366] HSQLDB currently doesn't support fetching updated records in UPDATE statements.
-            if (returned.size() > 0) {
+            // [#5408] Other dialects may fall through the switch above (PostgreSQL, Firebird, Oracle) and must
+            //         execute this logic
+            if (returned.size() > 0 || ctx.family() != HSQLDB) {
                 result = returned.size();
                 ctx.rows(result);
             }

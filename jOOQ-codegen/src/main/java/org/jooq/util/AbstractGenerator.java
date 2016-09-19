@@ -65,6 +65,10 @@ abstract class AbstractGenerator implements Generator {
     boolean                            generateGeneratedAnnotation      = true;
     boolean                            useSchemaVersionProvider         = false;
     boolean                            useCatalogVersionProvider        = false;
+    boolean                            generateRoutines                 = true;
+    boolean                            generateSequences                = true;
+    boolean                            generateUDTs                     = true;
+    boolean                            generateTables                   = true;
     boolean                            generateRecords                  = true;
     boolean                            generatePojos                    = false;
     boolean                            generatePojosEqualsAndHashCode   = false;
@@ -90,6 +94,8 @@ abstract class AbstractGenerator implements Generator {
     boolean                            fluentSetters                    = false;
     String                             generateFullyQualifiedTypes      = "";
     boolean                            generateTableValuedFunctions     = false;
+    boolean                            generateEmptyCatalogs            = false;
+    boolean                            generateEmptySchemas             = false;
 
     protected GeneratorStrategyWrapper strategy;
     protected String                   targetEncoding                   = "UTF-8";
@@ -175,7 +181,7 @@ abstract class AbstractGenerator implements Generator {
     public boolean generateRelations() {
 
         // [#2294] When DAOs are generated, relations must be generated, too
-        return generateRelations || generateDaos;
+        return generateRelations || generateTables || generateDaos;
     }
 
     @Override
@@ -234,6 +240,48 @@ abstract class AbstractGenerator implements Generator {
     @Override
     public void setUseCatalogVersionProvider(boolean useCatalogVersionProvider) {
         this.useCatalogVersionProvider = useCatalogVersionProvider;
+    }
+
+    @Override
+    public boolean generateRoutines() {
+        return generateRoutines;
+    }
+
+    @Override
+    public void setGenerateRoutines(boolean generateRoutines) {
+        this.generateRoutines = generateRoutines;
+    }
+
+    @Override
+    public boolean generateSequences() {
+        return generateSequences;
+    }
+
+    @Override
+    public void setGenerateSequences(boolean generateSequences) {
+        this.generateSequences = generateSequences;
+    }
+
+    @Override
+    public boolean generateUDTs() {
+        return generateUDTs;
+    }
+
+    @Override
+    public void setGenerateUDTs(boolean generateUDTs) {
+        this.generateUDTs = generateUDTs;
+    }
+
+    @Override
+    public boolean generateTables() {
+
+        // [#5525] When DAOs or records are generated, tables must be generated, too
+        return generateTables || generateRecords || generateDaos;
+    }
+
+    @Override
+    public void setGenerateTables(boolean generateTables) {
+        this.generateTables = generateTables;
     }
 
     @Override
@@ -343,7 +391,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalCatalogReferences() {
-        return generateGlobalCatalogReferences;
+        return generateGlobalObjectReferences() && generateGlobalCatalogReferences;
     }
 
     @Override
@@ -353,7 +401,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalSchemaReferences() {
-        return generateGlobalSchemaReferences;
+        return generateGlobalObjectReferences() && generateGlobalSchemaReferences;
     }
 
     @Override
@@ -363,7 +411,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalRoutineReferences() {
-        return generateGlobalRoutineReferences;
+        return generateRoutines() && generateGlobalObjectReferences() && generateGlobalRoutineReferences;
     }
 
     @Override
@@ -373,7 +421,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalSequenceReferences() {
-        return generateGlobalSequenceReferences;
+        return generateSequences() && generateGlobalObjectReferences() && generateGlobalSequenceReferences;
     }
 
     @Override
@@ -383,7 +431,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalTableReferences() {
-        return generateGlobalTableReferences;
+        return generateTables() && generateGlobalObjectReferences() && generateGlobalTableReferences;
     }
 
     @Override
@@ -393,7 +441,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalUDTReferences() {
-        return generateGlobalUDTReferences;
+        return generateUDTs() && generateGlobalObjectReferences() && generateGlobalUDTReferences;
     }
 
     @Override
@@ -403,7 +451,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalQueueReferences() {
-        return generateQueues && generateGlobalQueueReferences;
+        return generateQueues() && generateGlobalObjectReferences() && generateGlobalQueueReferences;
     }
 
     @Override
@@ -413,7 +461,7 @@ abstract class AbstractGenerator implements Generator {
 
     @Override
     public boolean generateGlobalLinkReferences() {
-        return generateLinks && generateGlobalLinkReferences;
+        return generateLinks() && generateGlobalObjectReferences() && generateGlobalLinkReferences;
     }
 
     @Override
@@ -491,6 +539,26 @@ abstract class AbstractGenerator implements Generator {
     @Override
     public void setGenerateFullyQualifiedTypes(String generateFullyQualifiedTypes) {
         this.generateFullyQualifiedTypes = generateFullyQualifiedTypes;
+    }
+
+    @Override
+    public boolean generateEmptyCatalogs() {
+        return generateEmptyCatalogs;
+    }
+
+    @Override
+    public void setGenerateEmptyCatalogs(boolean generateEmptyCatalogs) {
+        this.generateEmptyCatalogs = generateEmptyCatalogs;
+    }
+
+    @Override
+    public boolean generateEmptySchemas() {
+        return generateEmptySchemas;
+    }
+
+    @Override
+    public void setGenerateEmptySchemas(boolean generateEmptySchemas) {
+        this.generateEmptySchemas = generateEmptySchemas;
     }
 
     // ----

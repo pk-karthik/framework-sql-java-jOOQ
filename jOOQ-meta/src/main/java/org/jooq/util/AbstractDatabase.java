@@ -152,7 +152,7 @@ public abstract class AbstractDatabase implements Database {
     private List<RoutineDefinition>                                          routines;
     private List<PackageDefinition>                                          packages;
     private Relations                                                        relations;
-    private boolean                                                          includeRelations = true;
+    private boolean                                                          includeRelations     = true;
     private boolean                                                          tableValuedFunctions = true;
 
     private transient Map<SchemaDefinition, List<SequenceDefinition>>        sequencesBySchema;
@@ -364,12 +364,13 @@ public abstract class AbstractDatabase implements Database {
                 log.error("Could not load catalogs", e);
             }
 
-// [#4794] Add support for schema mapping
 //            Iterator<CatalogDefinition> it = catalogs.iterator();
 //            while (it.hasNext()) {
-//                if (!getInputSchemata().contains(it.next().getName())) {
-//                    it.remove();
-//                }
+//                CatalogDefinition catalog = it.next();
+//
+//                // [#4794] Add support for schema mapping
+//                // if (!getInputSchemata().contains(catalog.getName()))
+//                //    it.remove();
 //            }
         }
 
@@ -401,16 +402,16 @@ public abstract class AbstractDatabase implements Database {
 
             Iterator<SchemaDefinition> it = schemata.iterator();
             while (it.hasNext()) {
-                if (!getInputSchemata().contains(it.next().getName())) {
+                SchemaDefinition schema = it.next();
+
+                if (!getInputSchemata().contains(schema.getName()))
                     it.remove();
-                }
             }
 
-            if (schemata.isEmpty()) {
+            if (schemata.isEmpty())
                 log.warn(
                     "No schemata were loaded",
                     "Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputSchema/> elements : " + inputSchemata);
-            }
         }
 
         return schemata;

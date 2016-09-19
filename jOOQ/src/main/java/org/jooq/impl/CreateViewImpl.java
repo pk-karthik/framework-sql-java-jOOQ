@@ -57,6 +57,9 @@ import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.table;
 
+import java.util.List;
+import java.util.function.BiFunction;
+
 import org.jooq.Clause;
 import org.jooq.Configuration;
 import org.jooq.Context;
@@ -81,21 +84,38 @@ final class CreateViewImpl<R extends Record> extends AbstractQuery implements
     /**
      * Generated UID
      */
-    private static final long     serialVersionUID = 8904572826501186329L;
-    private static final Clause[] CLAUSES          = { CREATE_VIEW };
+    private static final long                                                       serialVersionUID = 8904572826501186329L;
+    private static final Clause[]                                                   CLAUSES          = { CREATE_VIEW };
 
-    private final boolean         ifNotExists;
-    private final Table<?>        view;
-    private final Field<?>[]      fields;
-    private Select<?>             select;
+    private final boolean                                                           ifNotExists;
+    private final Table<?>                                                          view;
+
+    private final BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction;
+
+    private Field<?>[]                                                              fields;
+    private Select<?>                                                               select;
 
     CreateViewImpl(Configuration configuration, Table<?> view, Field<?>[] fields, boolean ifNotExists) {
         super(configuration);
 
         this.view = view;
         this.fields = fields;
+
+        this.fieldNameFunction = null;
+
         this.ifNotExists = ifNotExists;
     }
+
+
+    CreateViewImpl(Configuration configuration, Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction, boolean ifNotExists) {
+        super(configuration);
+
+        this.view = view;
+        this.fields = null;
+        this.fieldNameFunction = fieldNameFunction;
+        this.ifNotExists = ifNotExists;
+    }
+
 
     // ------------------------------------------------------------------------
     // XXX: DSL API
@@ -104,6 +124,16 @@ final class CreateViewImpl<R extends Record> extends AbstractQuery implements
     @Override
     public final CreateViewFinalStep as(Select<? extends R> s) {
         this.select = s;
+
+
+        if (fieldNameFunction != null) {
+            List<Field<?>> source = s.getSelect();
+            fields = new Field[source.size()];
+            for (int i = 0; i < fields.length; i++)
+                fields[i] = fieldNameFunction.apply(source.get(i), i);
+        }
+
+
         return this;
     }
 

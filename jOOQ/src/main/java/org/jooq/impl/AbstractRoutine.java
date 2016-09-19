@@ -48,7 +48,6 @@ import static org.jooq.SQLDialect.FIREBIRD;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
-import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.table;
@@ -75,6 +74,7 @@ import org.jooq.AggregateFunction;
 import org.jooq.AttachableInternal;
 import org.jooq.BindContext;
 import org.jooq.Binding;
+import org.jooq.Catalog;
 import org.jooq.Clause;
 import org.jooq.Configuration;
 import org.jooq.Context;
@@ -855,6 +855,11 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
     }
 
     @Override
+    public final Catalog getCatalog() {
+        return getSchema() == null ? null : getSchema().getCatalog();
+    }
+
+    @Override
     public final Schema getSchema() {
         return schema;
     }
@@ -1183,9 +1188,9 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
                             fields.add(getInValues().get(parameter));
                     else
                         if (pgArgNeedsCasting(parameter))
-                            fields.add(field("{0} := {1}", name(parameter.getName()), new Cast(getInValues().get(parameter), parameter.getDataType())));
+                            fields.add(DSL.field("{0} := {1}", name(parameter.getName()), new Cast(getInValues().get(parameter), parameter.getDataType())));
                         else
-                            fields.add(field("{0} := {1}", name(parameter.getName()), getInValues().get(parameter)));
+                            fields.add(DSL.field("{0} := {1}", name(parameter.getName()), getInValues().get(parameter)));
                 else
                     fields.add(getInValues().get(parameter));
             }

@@ -121,6 +121,46 @@ public interface Generator {
     void setUseCatalogVersionProvider(boolean useCatalogVersionProvider);
 
     /**
+     * Whether Routines should be generated.
+     */
+    boolean generateRoutines();
+
+    /**
+     * Whether Routines should be generated.
+     */
+    void setGenerateRoutines(boolean generateRoutines);
+
+    /**
+     * Whether Sequences should be generated.
+     */
+    boolean generateSequences();
+
+    /**
+     * Whether Sequences should be generated.
+     */
+    void setGenerateSequences(boolean generateSequences);
+
+    /**
+     * Whether UDTs should be generated.
+     */
+    boolean generateUDTs();
+
+    /**
+     * Whether UDTs should be generated.
+     */
+    void setGenerateUDTs(boolean generateUDTs);
+
+    /**
+     * Whether Tables should be generated
+     */
+    boolean generateTables();
+
+    /**
+     * Whether Tables should be generated
+     */
+    void setGenerateTables(boolean generateTables);
+
+    /**
      * Whether TableRecords should be generated in addition to tables
      */
     boolean generateRecords();
@@ -388,6 +428,26 @@ public interface Generator {
      * be fully qualified.
      */
     void setGenerateFullyQualifiedTypes(String generateFullyQualifiedTypes);
+
+    /**
+     * Whether empty catalogs should still be generated.
+     */
+    boolean generateEmptyCatalogs();
+
+    /**
+     * Whether empty catalogs should still be generated.
+     */
+    void setGenerateEmptyCatalogs(boolean generateEmptyCatalogs);
+
+    /**
+     * Whether empty schemas should still be generated.
+     */
+    boolean generateEmptySchemas();
+
+    /**
+     * Whether empty schemas should still be generated.
+     */
+    void setGenerateEmptySchemas(boolean generateEmptySchemas);
 
     /**
      * The target directory

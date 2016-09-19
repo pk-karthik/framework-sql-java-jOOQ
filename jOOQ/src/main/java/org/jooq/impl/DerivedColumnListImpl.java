@@ -42,6 +42,9 @@ package org.jooq.impl;
 
 import static org.jooq.impl.DSL.name;
 
+import java.util.List;
+import java.util.function.BiFunction;
+
 import org.jooq.Clause;
 import org.jooq.CommonTableExpression;
 import org.jooq.Context;
@@ -68,6 +71,7 @@ import org.jooq.DerivedColumnList6;
 import org.jooq.DerivedColumnList7;
 import org.jooq.DerivedColumnList8;
 import org.jooq.DerivedColumnList9;
+import org.jooq.Field;
 import org.jooq.Select;
 
 /**
@@ -107,20 +111,46 @@ implements
     /**
      * Gemerated UID
      */
-    private static final long serialVersionUID = -369633206858851863L;
+    private static final long                                             serialVersionUID = -369633206858851863L;
 
-    final String              name;
-    final String[]            fieldNames;
+    final String                                                          name;
+    final String[]                                                        fieldNames;
+
+    final BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction;
+
 
     DerivedColumnListImpl(String name, String[] fieldNames) {
         this.name = name;
         this.fieldNames = fieldNames;
+
+        this.fieldNameFunction = null;
+
     }
+
+
+    DerivedColumnListImpl(String name, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction) {
+        this.name = name;
+        this.fieldNames = null;
+        this.fieldNameFunction = fieldNameFunction;
+    }
+
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public final CommonTableExpression as(Select select) {
-        return new CommonTableExpressionImpl(this, select);
+        Select<?> s = select;
+
+
+        if (fieldNameFunction != null) {
+            List<Field<?>> source = s.getSelect();
+            String[] names = new String[source.size()];
+            for (int i = 0; i < names.length; i++)
+                names[i] = fieldNameFunction.apply(source.get(i), i);
+            return new CommonTableExpressionImpl(new DerivedColumnListImpl(name, names), s);
+        }
+
+
+        return new CommonTableExpressionImpl(this, s);
     }
 
     @Override

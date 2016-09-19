@@ -45,10 +45,10 @@ import static org.jooq.Clause.SEQUENCE_REFERENCE;
 import static org.jooq.SQLDialect.CUBRID;
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
-import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.select;
 
+import org.jooq.Catalog;
 import org.jooq.Clause;
 import org.jooq.Configuration;
 import org.jooq.Context;
@@ -94,6 +94,11 @@ public class SequenceImpl<T extends Number> extends AbstractQueryPart implements
     @Override
     public final String getName() {
         return name;
+    }
+
+    @Override
+    public final Catalog getCatalog() {
+        return getSchema() == null ? null : getSchema().getCatalog();
     }
 
     @Override
@@ -148,12 +153,12 @@ public class SequenceImpl<T extends Number> extends AbstractQueryPart implements
 
                 case POSTGRES: {
                     String field = method + "('" + getQualifiedName(configuration) + "')";
-                    return field(field, getDataType());
+                    return DSL.field(field, getDataType());
                 }
 
                 case H2: {
                     String field = method + "(" + getQualifiedName(configuration, true) + ")";
-                    return field(field, getDataType());
+                    return DSL.field(field, getDataType());
                 }
 
 
@@ -164,10 +169,10 @@ public class SequenceImpl<T extends Number> extends AbstractQueryPart implements
                 case HSQLDB: {
                     if ("nextval".equals(method)) {
                         String field = "next value for " + getQualifiedName(configuration);
-                        return field(field, getDataType());
+                        return DSL.field(field, getDataType());
                     }
                     else if (family == FIREBIRD) {
-                        return field("gen_id(" + getQualifiedName(configuration) + ", 0)", getDataType());
+                        return DSL.field("gen_id(" + getQualifiedName(configuration) + ", 0)", getDataType());
                     }
 
 
@@ -198,13 +203,13 @@ public class SequenceImpl<T extends Number> extends AbstractQueryPart implements
                         field += "current_value";
                     }
 
-                    return field(field, getDataType());
+                    return DSL.field(field, getDataType());
                 }
 
                 // Default is needed for hashCode() and toString()
                 default: {
                     String field = getQualifiedName(configuration) + "." + method;
-                    return field(field, getDataType());
+                    return DSL.field(field, getDataType());
                 }
             }
         }

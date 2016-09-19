@@ -63,6 +63,7 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 import static org.jooq.conf.ParamType.INLINED;
+import static org.jooq.impl.DSL.cast;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.using;
@@ -670,7 +671,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 }
 
                 else if (family == POSTGRES) {
-                    render.visit(inline(PostgresUtils.toPGArrayString((Object[]) val)));
+                    render.visit(cast(inline(PostgresUtils.toPGArrayString((Object[]) val)), type));
                 }
 
                 // By default, render HSQLDB / POSTGRES syntax
@@ -857,14 +858,11 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         SQLDialect dialect = ctx.dialect();
         T value = converter.to(ctx.value());
 
-        if (log.isTraceEnabled()) {
-            if (value != null && value.getClass().isArray() && value.getClass() != byte[].class) {
+        if (log.isTraceEnabled())
+            if (value != null && value.getClass().isArray() && value.getClass() != byte[].class)
                 log.trace("Binding variable " + ctx.index(), Arrays.asList((Object[]) value) + " (" + type + ")");
-            }
-            else {
+            else
                 log.trace("Binding variable " + ctx.index(), value + " (" + type + ")");
-            }
-        }
 
         // Setting null onto a prepared statement is subtly different for every
         // SQL dialect. See the following section for details
@@ -1311,16 +1309,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
-
-
-
-
-
-
-
-
-
         else if (EnumType.class.isAssignableFrom(type)) {
             ctx.output().writeString(((EnumType) value).getLiteral());
         }
@@ -1331,6 +1319,34 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             throw new UnsupportedOperationException("Type " + type + " is not supported");
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @SuppressWarnings("unchecked")
     @Override
@@ -1931,6 +1947,10 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
+
+
+
+
     /**
      * [#2534] Extract <code>byte[]</code> or <code>String</code> data from a
      * LOB, if the argument is a lob.
@@ -2159,6 +2179,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
         else if (Record.class.isAssignableFrom(type)) {
             return (T) pgNewRecord(type, null, string);
+        }
+        else if (type == Object.class) {
+            return (T) string;
         }
         else {
             Converter<Object, T> c = (Converter<Object, T>) converter;

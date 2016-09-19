@@ -54,6 +54,9 @@ import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import javax.annotation.Generated;
 
 import org.jooq.conf.Settings;
@@ -107,6 +110,38 @@ public interface Name extends QueryPart {
      */
     @Support({ FIREBIRD, H2, HSQLDB, POSTGRES })
     DerivedColumnList fields(String... fieldNames);
+
+
+    /**
+     * Add a list of fields to this name to make this name a
+     * {@link DerivedColumnList}.
+     * <p>
+     * The <code>DerivedColumnList</code> can then be used along with a
+     * subselect to form a {@link CommonTableExpression} to be used with
+     * <code>WITH</code> clauses.
+     * <p>
+     * This works in a similar way as {@link #fields(String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns and their column indexes as input.
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES })
+    DerivedColumnList fields(Function<? super Field<?>, ? extends String> fieldNameFunction);
+
+    /**
+     * Add a list of fields to this name to make this name a
+     * {@link DerivedColumnList}.
+     * <p>
+     * The <code>DerivedColumnList</code> can then be used along with a
+     * subselect to form a {@link CommonTableExpression} to be used with
+     * <code>WITH</code> clauses.
+     * <p>
+     * This works in a similar way as {@link #fields(String...)}, except
+     * that all column names are produced by a function that receives the CTE's
+     * {@link Select} columns as input.
+     */
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES })
+    DerivedColumnList fields(BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
+
 
     // [jooq-tools] START [fields]
 
