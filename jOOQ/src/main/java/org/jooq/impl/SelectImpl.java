@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -3675,6 +3669,13 @@ final class SelectImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     public final Row fieldsRow() {
         return getDelegate().fieldsRow();
     }
+
+
+    @Override
+    public final Stream<Field<?>> fieldStream() {
+        return Stream.of(fields());
+    }
+
 
     @Override
     public final <T> Field<T> field(Field<T> field) {

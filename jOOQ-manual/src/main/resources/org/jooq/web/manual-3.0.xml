@@ -133,9 +133,7 @@
                     </p>
                     <h3>License for jOOQ 1.x, 2.x, 3.0, 3.1</h3>
 
-<text>Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
-
-Licensed under the Apache License, Version 2.0 (the "License");
+<text>Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
@@ -149,10 +147,7 @@ limitations under the License.</text>
 
                     <h3>License for jOOQ 3.2 and later</h3>
 
-</html><text>Copyright (c) 2009-2015, Data Geekery GmbH (http://www.datageekery.com)
-All rights reserved.
-
-This work is dual-licensed
+</html><text>This work is dual-licensed
 - under the Apache Software License 2.0 (the "ASL")
 - under the jOOQ License and Maintenance Agreement (the "jOOQ License")
 =============================================================================
@@ -777,7 +772,7 @@ CREATE TABLE `posts` (
 
       <!-- All elements that are excluded from your schema
            (A Java regular expression. Use the pipe to separate several expressions).
-           Excludes match before includes -->
+           Excludes match before includes, i.e. excludes have a higher priority -->
       <excludes></excludes>
     </database>
 
@@ -5540,7 +5535,7 @@ create.select()
       .fetch();]]></java><html>
 
                             <p>
-                                The dynamic SQL building power may be one of the biggest advantages of using a runtime query model like the one offered by jOOQ. Queries can be created dynamically, of arbitrary complexity. In the above example, we've just constructed a dynamic <reference id="where-clause" title="WHERE clause"/>. The same can be done for any other clauses, including dynamic <reference id="from-clause" title="FROM clauses (dynamic JOINs)"/>, or adding additional <reference id="with-clause" title="WITH clauses"/> as needed.
+                                The dynamic SQL building power may be one of the biggest advantages of using a runtime query model like the one offered by jOOQ. Queries can be created dynamically, of arbitrary complexity. In the above example, we've just constructed a dynamic <reference id="where-clause" title="WHERE clause"/>. The same can be done for any other clauses, including dynamic <reference id="from-clause" title="FROM clauses (dynamic JOINs)"/> as needed.
                             </p>
                         </html></content>
                     </section>
@@ -8797,7 +8792,7 @@ Finishing                : Total: 4.814ms, +3.375ms
 
       <!-- All elements that are excluded from your schema (A Java regular expression.
            Use the pipe to separate several expressions). Excludes match before
-           includes -->
+           includes, i.e. excludes have a higher priority -->
       <excludes></excludes>
 
       <!-- The schema that is used locally as a source for meta information.

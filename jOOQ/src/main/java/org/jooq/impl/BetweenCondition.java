@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -64,6 +58,7 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
+import static org.jooq.impl.DSL.nullSafe;
 import static org.jooq.impl.DSL.val;
 
 import org.jooq.BetweenAndStep;
@@ -100,14 +95,14 @@ final class BetweenCondition<T> extends AbstractCondition implements BetweenAndS
 
     @Override
     public final Condition and(T value) {
-        return and(val(value));
+        return and(val(value, field.getDataType()));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public final Condition and(Field f) {
         if (maxValue == null) {
-            this.maxValue = f;
+            this.maxValue = nullSafe(f, field.getDataType());
             return this;
         }
         else {

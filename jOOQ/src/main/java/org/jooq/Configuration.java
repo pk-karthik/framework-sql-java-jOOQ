@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -406,8 +400,8 @@ public interface Configuration extends Serializable {
      * This method is not thread-safe and should not be used in globally
      * available <code>Configuration</code> objects.
      *
-     * @param newExecutorProvider The new executor to be contained in the
-     *            changed configuration.
+     * @param newExecutor The new executor to be contained in the changed
+     *            configuration.
      * @return The changed configuration.
      */
     Configuration set(Executor newExecutor);
@@ -432,7 +426,7 @@ public interface Configuration extends Serializable {
      * This method is not thread-safe and should not be used in globally
      * available <code>Configuration</code> objects.
      *
-     * @param newConnection The new data source to be contained in the changed
+     * @param newDataSource The new data source to be contained in the changed
      *            configuration.
      * @return The changed configuration.
      */
@@ -459,8 +453,8 @@ public interface Configuration extends Serializable {
      * This method is not thread-safe and should not be used in globally
      * available <code>Configuration</code> objects.
      *
-     * @param newRecordMapperProvider The new record mapper to be contained in
-     *            the changed configuration.
+     * @param newRecordMapper The new record mapper to be contained in the
+     *            changed configuration.
      * @return The changed configuration.
      */
     Configuration set(RecordMapper<?, ?> newRecordMapper);

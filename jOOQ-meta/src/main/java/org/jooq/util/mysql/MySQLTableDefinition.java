@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,14 +31,12 @@
  *
  *
  *
- *
- *
- *
  */
 
 package org.jooq.util.mysql;
 
 import static java.util.Arrays.asList;
+import static org.jooq.impl.DSL.name;
 import static org.jooq.util.mysql.information_schema.tables.Columns.COLUMNS;
 import static org.jooq.util.mysql.information_schema.tables.Columns.ORDINAL_POSITION;
 import static org.jooq.util.mysql.information_schema.tables.Columns.TABLE_NAME;
@@ -67,39 +62,39 @@ public class MySQLTableDefinition extends AbstractTableDefinition {
 
     public MySQLTableDefinition(SchemaDefinition schema, String name, String comment) {
         super(schema, name, comment);
-	}
+    }
 
-	@Override
-	public List<ColumnDefinition> getElements0() throws SQLException {
-		List<ColumnDefinition> result = new ArrayList<ColumnDefinition>();
+    @Override
+    public List<ColumnDefinition> getElements0() throws SQLException {
+        List<ColumnDefinition> result = new ArrayList<ColumnDefinition>();
 
-		for (Record record : create().select(
-        		    Columns.ORDINAL_POSITION,
-    		        Columns.COLUMN_NAME,
-    		        Columns.COLUMN_COMMENT,
-    		        Columns.COLUMN_TYPE,
-    		        Columns.DATA_TYPE,
-    		        Columns.IS_NULLABLE,
-    		        Columns.COLUMN_DEFAULT,
-    		        Columns.CHARACTER_MAXIMUM_LENGTH,
-    		        Columns.NUMERIC_PRECISION,
-    		        Columns.NUMERIC_SCALE,
-    		        Columns.EXTRA)
-    		    .from(COLUMNS)
-    		    .where(TABLE_SCHEMA.equal(getSchema().getName()))
-    		    .and(TABLE_NAME.equal(getName()))
-    		    .orderBy(ORDINAL_POSITION)) {
+        for (Record record : create().select(
+                    Columns.ORDINAL_POSITION,
+                    Columns.COLUMN_NAME,
+                    Columns.COLUMN_COMMENT,
+                    Columns.COLUMN_TYPE,
+                    Columns.DATA_TYPE,
+                    Columns.IS_NULLABLE,
+                    Columns.COLUMN_DEFAULT,
+                    Columns.CHARACTER_MAXIMUM_LENGTH,
+                    Columns.NUMERIC_PRECISION,
+                    Columns.NUMERIC_SCALE,
+                    Columns.EXTRA)
+                .from(COLUMNS)
+                .where(TABLE_SCHEMA.equal(getSchema().getName()))
+                .and(TABLE_NAME.equal(getName()))
+                .orderBy(ORDINAL_POSITION)) {
 
-		    String dataType = record.get(Columns.DATA_TYPE);
+            String dataType = record.get(Columns.DATA_TYPE);
 
-		    // [#519] Some types have unsigned versions
-		    if (getDatabase().supportsUnsignedTypes()) {
-    		    if (asList("tinyint", "smallint", "mediumint", "int", "bigint").contains(dataType.toLowerCase())) {
-    	            if (record.get(Columns.COLUMN_TYPE).toLowerCase().contains("unsigned")) {
-    	                dataType += "unsigned";
-    	            }
-    		    }
-		    }
+            // [#519] Some types have unsigned versions
+            if (getDatabase().supportsUnsignedTypes()) {
+                if (asList("tinyint", "smallint", "mediumint", "int", "bigint").contains(dataType.toLowerCase())) {
+                    if (record.get(Columns.COLUMN_TYPE).toLowerCase().contains("unsigned")) {
+                        dataType += "unsigned";
+                    }
+                }
+            }
 
             DataTypeDefinition type = new DefaultDataTypeDefinition(
                 getDatabase(),
@@ -110,21 +105,21 @@ public class MySQLTableDefinition extends AbstractTableDefinition {
                 record.get(Columns.NUMERIC_SCALE),
                 record.get(Columns.IS_NULLABLE, boolean.class),
                 record.get(Columns.COLUMN_DEFAULT),
-                getName() + "_" + record.get(Columns.COLUMN_NAME)
+                name(getSchema().getName(), getName() + "_" + record.get(Columns.COLUMN_NAME))
             );
 
-			ColumnDefinition column = new DefaultColumnDefinition(
-				getDatabase().getTable(getSchema(), getName()),
-			    record.get(Columns.COLUMN_NAME),
-			    record.get(Columns.ORDINAL_POSITION, int.class),
-			    type,
-			    "auto_increment".equalsIgnoreCase(record.get(Columns.EXTRA)),
-			    record.get(Columns.COLUMN_COMMENT)
-		    );
+            ColumnDefinition column = new DefaultColumnDefinition(
+                getDatabase().getTable(getSchema(), getName()),
+                record.get(Columns.COLUMN_NAME),
+                record.get(Columns.ORDINAL_POSITION, int.class),
+                type,
+                "auto_increment".equalsIgnoreCase(record.get(Columns.EXTRA)),
+                record.get(Columns.COLUMN_COMMENT)
+            );
 
-			result.add(column);
-		}
+            result.add(column);
+        }
 
-		return result;
-	}
+        return result;
+    }
 }

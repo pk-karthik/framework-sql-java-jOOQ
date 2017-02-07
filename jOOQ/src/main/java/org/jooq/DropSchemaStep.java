@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,11 +31,11 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
+
+import static org.jooq.SQLDialect.HSQLDB;
+import static org.jooq.SQLDialect.POSTGRES;
 
 /**
  * The step in the <code>DROP SCHEMA</code> DSL used to specify
@@ -52,13 +49,13 @@ public interface DropSchemaStep extends DropSchemaFinalStep {
      * Add a <code>CASCADE</code> clause to the <code>DROP SCHEMA</code>
      * statement.
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     DropSchemaFinalStep cascade();
 
     /**
      * Add a <code>RESTRICT</code> clause to the <code>DROP SCHEMA</code>
      * statement.
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     DropSchemaFinalStep restrict();
 }

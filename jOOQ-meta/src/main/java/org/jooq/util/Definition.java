@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,14 +31,13 @@
  *
  *
  *
- *
- *
- *
  */
 
 package org.jooq.util;
 
 import java.util.List;
+
+import org.jooq.Name;
 
 /**
  * A general interface defining any database object, such as tables, views,
@@ -114,6 +110,24 @@ public interface Definition {
      *         {@link #getOutputName()})
      */
     String getQualifiedOutputName();
+
+    /**
+     * @return A qualified name for this object (corresponding to
+     *         {@link #getName()})
+     */
+    Name getQualifiedNamePart();
+
+    /**
+     * @return A qualified name for this object (corresponding to
+     *         {@link #getInputName()})
+     */
+    Name getQualifiedInputNamePart();
+
+    /**
+     * @return A qualified name for this object (corresponding to
+     *         {@link #getOutputName()})
+     */
+    Name getQualifiedOutputNamePart();
 
     /**
      * @return The overload suffix if applicable

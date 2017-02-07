@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -101,6 +95,8 @@ import org.jooq.Configuration;
 import org.jooq.ConnectionCallable;
 import org.jooq.ConnectionProvider;
 import org.jooq.ConnectionRunnable;
+import org.jooq.ContextTransactionalCallable;
+import org.jooq.ContextTransactionalRunnable;
 import org.jooq.CreateIndexStep;
 import org.jooq.CreateSchemaFinalStep;
 import org.jooq.CreateSequenceFinalStep;
@@ -173,7 +169,7 @@ import org.jooq.MergeUsingStep;
 import org.jooq.Meta;
 import org.jooq.Name;
 import org.jooq.Param;
-// ...
+import org.jooq.Parser;
 import org.jooq.Queries;
 import org.jooq.Query;
 import org.jooq.QueryPart;
@@ -217,8 +213,6 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableLike;
 import org.jooq.TableRecord;
-import org.jooq.ThreadLocalTransactionalCallable;
-import org.jooq.ThreadLocalTransactionalRunnable;
 import org.jooq.TransactionProvider;
 import org.jooq.TransactionalCallable;
 import org.jooq.TransactionalRunnable;
@@ -363,12 +357,16 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     // XXX Convenience methods accessing the underlying Connection
     // -------------------------------------------------------------------------
 
+    @Override
+    @Deprecated
+    public Parser parser() {
+        return new ParserImpl(configuration());
+    }
 
-
-
-
-
-
+    @Override
+    public Connection parsingConnection() {
+        return new ParsingConnection(configuration());
+    }
 
     @Override
     public Meta meta() {
@@ -407,12 +405,12 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public InformationSchema informationSchema(Table<?> table) {
-        return InformationSchemaExport.exportTables(configuration(), Arrays.asList(table));
+        return InformationSchemaExport.exportTables(configuration(), Arrays.<Table<?>>asList(table));
     }
 
     @Override
     public InformationSchema informationSchema(Table<?>... tables) {
-        return InformationSchemaExport.exportTables(configuration(), Arrays.asList(tables));
+        return InformationSchemaExport.exportTables(configuration(), Arrays.<Table<?>>asList(tables));
     }
 
     // -------------------------------------------------------------------------
@@ -420,7 +418,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     // -------------------------------------------------------------------------
 
     @Override
-    public <T> T transactionResult(final ThreadLocalTransactionalCallable<T> transactional) {
+    public <T> T transactionResult(final ContextTransactionalCallable<T> transactional) {
         TransactionProvider tp = configuration().transactionProvider();
 
         if (!(tp instanceof ThreadLocalTransactionProvider))
@@ -508,8 +506,8 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     }
 
     @Override
-    public void transaction(final ThreadLocalTransactionalRunnable transactional) {
-        transactionResult(new ThreadLocalTransactionalCallable<Void>() {
+    public void transaction(final ContextTransactionalRunnable transactional) {
+        transactionResult(new ContextTransactionalCallable<Void>() {
             @Override
             public Void run() throws Exception {
                 transactional.run();
@@ -3146,6 +3144,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     }
 
     // [jooq-tools] START [newRecord]
+
     @Generated("This method was generated using jOOQ-tools")
     @Override
     public <T1> Record1<T1> newRecord(Field<T1> field1) {

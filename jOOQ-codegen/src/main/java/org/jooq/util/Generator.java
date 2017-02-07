@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -428,6 +422,22 @@ public interface Generator {
      * be fully qualified.
      */
     void setGenerateFullyQualifiedTypes(String generateFullyQualifiedTypes);
+
+    /**
+     * A flag indicating whether Java 8's java.time types should be used by the
+     * source code generator, rather than JDBC's java.sql types.
+     * <p>
+     * This flag is ignored in the commercial Java 6 distribution of jOOQ 3.9+
+     */
+    boolean generateJavaTimeTypes();
+
+    /**
+     * A flag indicating whether Java 8's java.time types should be used by the
+     * source code generator, rather than JDBC's java.sql types.
+     * <p>
+     * This flag is ignored in the commercial Java 6 distribution of jOOQ 3.9+
+     */
+    void setGenerateJavaTimeTypes(boolean generateJavaTimeTypes);
 
     /**
      * Whether empty catalogs should still be generated.

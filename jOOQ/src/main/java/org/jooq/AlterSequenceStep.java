@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
@@ -46,6 +40,7 @@ import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
+// ...
 // ...
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
@@ -77,21 +72,21 @@ public interface AlterSequenceStep<T extends Number> extends AlterSequenceRestar
      * Add a <code>RENAME TO</code> clause to the <code>ALTER SEQUENCE</code>
      * statement.
      */
-    @Support({ POSTGRES })
+    @Support({ HSQLDB, POSTGRES })
     AlterSequenceFinalStep renameTo(Sequence<?> newName);
 
     /**
      * Add a <code>RENAME TO</code> clause to the <code>ALTER SEQUENCE</code>
      * statement.
      */
-    @Support({ POSTGRES })
+    @Support({ HSQLDB, POSTGRES })
     AlterSequenceFinalStep renameTo(Name newName);
 
     /**
      * Add a <code>RENAME TO</code> clause to the <code>ALTER SEQUENCE</code>
      * statement.
      */
-    @Support({ POSTGRES })
+    @Support({ HSQLDB, POSTGRES })
     AlterSequenceFinalStep renameTo(String newName);
 
 }

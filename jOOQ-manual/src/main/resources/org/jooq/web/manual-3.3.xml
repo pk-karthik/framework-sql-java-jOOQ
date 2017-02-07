@@ -175,10 +175,7 @@
                         <h3>License for jOOQ 3.2 and later</h3>
                     </html>
 
-<text>Copyright (c) 2009-2015, Data Geekery GmbH (http://www.datageekery.com)
-All rights reserved.
-
-This work is dual-licensed
+<text>This work is dual-licensed
 - under the Apache Software License 2.0 (the "ASL")
 - under the jOOQ License and Maintenance Agreement (the "jOOQ License")
 =============================================================================
@@ -218,9 +215,7 @@ and Maintenance Agreement for more details: http://www.jooq.org/licensing</text>
                         <h3>Historic license for jOOQ 1.x, 2.x, 3.0, 3.1</h3>
                     </html>
 
-<text>Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
-
-Licensed under the Apache License, Version 2.0 (the "License");
+<text>Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
@@ -843,7 +838,7 @@ CREATE TABLE `author` (
 
       <!-- All elements that are excluded from your schema
            (A Java regular expression. Use the pipe to separate several expressions).
-           Excludes match before includes -->
+           Excludes match before includes, i.e. excludes have a higher priority -->
       <excludes></excludes>
     </database>
 
@@ -6850,7 +6845,7 @@ create.select()
       .fetch();]]></java><html>
 
                             <p>
-                                The dynamic SQL building power may be one of the biggest advantages of using a runtime query model like the one offered by jOOQ. Queries can be created dynamically, of arbitrary complexity. In the above example, we've just constructed a dynamic <reference id="where-clause" title="WHERE clause"/>. The same can be done for any other clauses, including dynamic <reference id="from-clause" title="FROM clauses (dynamic JOINs)"/>, or adding additional <reference id="with-clause" title="WITH clauses"/> as needed.
+                                The dynamic SQL building power may be one of the biggest advantages of using a runtime query model like the one offered by jOOQ. Queries can be created dynamically, of arbitrary complexity. In the above example, we've just constructed a dynamic <reference id="where-clause" title="WHERE clause"/>. The same can be done for any other clauses, including dynamic <reference id="from-clause" title="FROM clauses (dynamic JOINs)"/> as needed.
                             </p>
                         </html></content>
                     </section>
@@ -10524,7 +10519,7 @@ Finishing                : Total: 4.814ms, +3.375ms
 
       <!-- All elements that are excluded from your schema (A Java regular expression.
            Use the pipe to separate several expressions). Excludes match before
-           includes -->
+           includes, i.e. excludes have a higher priority -->
       <excludes></excludes>
 
       <!-- The schema that is used locally as a source for meta information.
@@ -11140,21 +11135,20 @@ public class Book implements java.io.Serializable {
                                 In the <reference id="codegen-generatorstrategy" title="previous section"/>, we have seen how to override generator strategies programmatically. In this chapter, we'll see how such strategies can be configured in the XML or Maven <reference id="codegen-configuration" title="code generator configuration"/>. Instead of specifying a strategy name, you can also specify a <code>&lt;matchers/></code> element as such:
                             </p>
 
-                            <p>
-                                <strong>NOTE:</strong> There had been an incompatible change between jOOQ 3.2 and jOOQ 3.3 in the configuration of these matcher strategies. See <a href="https://github.com/jOOQ/jOOQ/issues/3217">Issue #3217</a> for details.
-                            </p>
+                            <ul>
+                                <li><strong>NOTE:</strong> All regular expressions that match object identifiers try to match identifiers first by unqualified name (<code>org.jooq.util.Definition.getName()</code>), then by qualified name (<code>org.jooq.util.Definition.getQualifiedName()</code>).</li>
+                                <li><strong>NOTE:</strong> There had been an incompatible change between jOOQ 3.2 and jOOQ 3.3 in the configuration of these matcher strategies. See <a href="https://github.com/jOOQ/jOOQ/issues/3217">Issue #3217</a> for details.</li>
+                            </ul>
 
 </html><xml><![CDATA[<!-- These properties can be added directly to the generator element: -->
 <generator>
   <strategy>
     <matchers>
-      <!-- Specify 0..n schema matchers in order to provide a naming strategy for objects
-           created from schemas. -->
+      <!-- Specify 0..n schema matchers in order to provide a naming strategy for objects created from schemas. -->
       <schemas>
         <schema>
 
-          <!-- This schema matcher applies to all unqualified or qualified schema names
-               matched by this regular expression. If left empty, this matcher applies to all schemas. -->
+          <!-- Match unqualified or qualified schema names. If left empty, this matcher applies to all schemas. -->
           <expression>MY_SCHEMA</expression>
 
           <!-- These elements influence the naming of a generated org.jooq.Schema object. -->
@@ -11169,7 +11163,7 @@ public class Book implements java.io.Serializable {
       <tables>
         <table>
 
-          <!-- The table matcher regular expression. -->
+          <!-- Match unqualified or qualified table names. If left empty, this matcher applies to all tables. -->
           <expression>MY_TABLE</expression>
 
           <!-- These elements influence the naming of a generated org.jooq.Table object. -->
@@ -11202,7 +11196,7 @@ public class Book implements java.io.Serializable {
       <fields>
         <field>
 
-          <!-- The field matcher regular expression. -->
+          <!-- Match unqualified or qualified field names. If left empty, this matcher applies to all fields. -->
           <expression>MY_FIELD</expression>
 
           <!-- These elements influence the naming of a generated org.jooq.Field object. -->
@@ -11218,7 +11212,7 @@ public class Book implements java.io.Serializable {
       <routines>
         <routine>
 
-          <!-- The routine matcher regular expression. -->
+          <!-- Match unqualified or qualified routine names. If left empty, this matcher applies to all routines. -->
           <expression>MY_ROUTINE</expression>
 
           <!-- These elements influence the naming of a generated org.jooq.Routine object. -->
@@ -11233,7 +11227,7 @@ public class Book implements java.io.Serializable {
       <sequences>
         <sequence>
 
-          <!-- The sequence matcher regular expression. -->
+          <!-- Match unqualified or qualified sequence names. If left empty, this matcher applies to all sequences. -->
           <expression>MY_SEQUENCE</expression>
 
           <!-- These elements influence the naming of the generated Sequences class. -->

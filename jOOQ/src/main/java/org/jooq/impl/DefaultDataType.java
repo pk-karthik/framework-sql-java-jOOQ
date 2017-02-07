@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
 
@@ -51,10 +45,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -205,6 +198,7 @@ public class DefaultDataType<T> implements DataType<T> {
     private final String                                 typeName;
 
     private final boolean                                nullable;
+    private final boolean                                identity;
     private final Field<T>                               defaultValue;
     private final int                                    precision;
     private final int                                    scale;
@@ -259,6 +253,10 @@ public class DefaultDataType<T> implements DataType<T> {
     }
 
     DefaultDataType(SQLDialect dialect, DataType<T> sqlDataType, Class<T> type, Binding<?, T> binding, String typeName, String castTypeName, int precision, int scale, int length, boolean nullable, Field<T> defaultValue) {
+        this(dialect, sqlDataType, type, binding, typeName, castTypeName, precision, scale, length, nullable, false, defaultValue);
+    }
+
+    DefaultDataType(SQLDialect dialect, DataType<T> sqlDataType, Class<T> type, Binding<?, T> binding, String typeName, String castTypeName, int precision, int scale, int length, boolean nullable, boolean identity, Field<T> defaultValue) {
 
         // Initialise final instance members
         // ---------------------------------
@@ -274,6 +272,7 @@ public class DefaultDataType<T> implements DataType<T> {
         this.arrayType = (Class<T[]>) Array.newInstance(type, 0).getClass();
 
         this.nullable = nullable;
+        this.identity = identity;
         this.defaultValue = defaultValue;
         this.precision = precision0(type, precision);
         this.scale = scale;
@@ -317,7 +316,7 @@ public class DefaultDataType<T> implements DataType<T> {
     /**
      * [#3225] Performant constructor for creating derived types.
      */
-    private DefaultDataType(DefaultDataType<T> t, int precision, int scale, int length, boolean nullable, Field<T> defaultValue) {
+    private DefaultDataType(DefaultDataType<T> t, int precision, int scale, int length, boolean nullable, boolean identity, Field<T> defaultValue) {
         this.dialect = t.dialect;
         this.sqlDataType = t.sqlDataType;
         this.type = t.type;
@@ -327,6 +326,7 @@ public class DefaultDataType<T> implements DataType<T> {
         this.arrayType = t.arrayType;
 
         this.nullable = nullable;
+        this.identity = identity;
         this.defaultValue = defaultValue;
         this.precision = precision0(type, precision);
         this.scale = scale;
@@ -356,12 +356,22 @@ public class DefaultDataType<T> implements DataType<T> {
 
     @Override
     public final DataType<T> nullable(boolean n) {
-        return new DefaultDataType<T>(this, precision, scale, length, n, defaultValue);
+        return new DefaultDataType<T>(this, precision, scale, length, n, n ? false : identity, defaultValue);
     }
 
     @Override
     public final boolean nullable() {
         return nullable;
+    }
+
+    @Override
+    public final DataType<T> identity(boolean i) {
+        return new DefaultDataType<T>(this, precision, scale, length, i ? false : nullable, i, i ? null : defaultValue);
+    }
+
+    @Override
+    public final boolean identity() {
+        return identity;
     }
 
     @Override
@@ -371,7 +381,7 @@ public class DefaultDataType<T> implements DataType<T> {
 
     @Override
     public final DataType<T> defaultValue(Field<T> d) {
-        return new DefaultDataType<T>(this, precision, scale, length, nullable, d);
+        return new DefaultDataType<T>(this, precision, scale, length, nullable, d != null ? false : identity, d);
     }
 
     @Override
@@ -404,7 +414,7 @@ public class DefaultDataType<T> implements DataType<T> {
         else if (isLob())
             return this;
         else
-            return new DefaultDataType<T>(this, p, s, length, nullable, defaultValue);
+            return new DefaultDataType<T>(this, p, s, length, nullable, identity, defaultValue);
     }
 
     @Override
@@ -426,7 +436,7 @@ public class DefaultDataType<T> implements DataType<T> {
         if (isLob())
             return this;
         else
-            return new DefaultDataType<T>(this, precision, s, length, nullable, defaultValue);
+            return new DefaultDataType<T>(this, precision, s, length, nullable, identity, defaultValue);
     }
 
     @Override
@@ -448,7 +458,7 @@ public class DefaultDataType<T> implements DataType<T> {
         if (isLob())
             return this;
         else
-            return new DefaultDataType<T>(this, precision, scale, l, nullable, defaultValue);
+            return new DefaultDataType<T>(this, precision, scale, l, nullable, identity, defaultValue);
     }
 
     @Override
@@ -506,6 +516,11 @@ public class DefaultDataType<T> implements DataType<T> {
 
     @Override
     public /* final */ int getSQLType() {
+        return getSQLType(DSL.using(dialect).configuration());
+    }
+
+    @Override
+    public final int getSQLType(Configuration configuration) {
         // TODO [#1227] There is some confusion with these types, especially
         // when it comes to byte[] which can be mapped to BLOB, BINARY, VARBINARY
 
@@ -530,8 +545,17 @@ public class DefaultDataType<T> implements DataType<T> {
         else if (type == Clob.class) {
             return Types.CLOB;
         }
-        else if (type == Date.class) {
-            return Types.DATE;
+        else if (Tools.isDate(type)) {
+            switch (configuration.family()) {
+
+
+
+
+
+
+                default:
+                    return Types.DATE;
+            }
         }
         else if (type == Double.class) {
             return Types.DOUBLE;
@@ -551,17 +575,36 @@ public class DefaultDataType<T> implements DataType<T> {
         else if (type == String.class) {
             return Types.VARCHAR;
         }
-        else if (type == Time.class) {
+        else if (Tools.isTime(type)) {
             return Types.TIME;
         }
-        else if (type == Timestamp.class) {
+        else if (Tools.isTimestamp(type)) {
             return Types.TIMESTAMP;
         }
+
+
+        // [#5779] Few JDBC drivers support the JDBC 4.2 TIME[STAMP]_WITH_TIMEZONE types.
+        else if (type == OffsetTime.class) {
+            return Types.VARCHAR;
+        }
+        else if (type == OffsetDateTime.class) {
+            return Types.VARCHAR;
+        }
+
 
         // The type byte[] is handled earlier.
         else if (type.isArray()) {
             return Types.ARRAY;
         }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -574,7 +617,7 @@ public class DefaultDataType<T> implements DataType<T> {
             return Types.STRUCT;
         }
         else if (Result.class.isAssignableFrom(type)) {
-            switch (dialect.family()) {
+            switch (configuration.family()) {
 
 
 
@@ -856,6 +899,11 @@ public class DefaultDataType<T> implements DataType<T> {
     public final boolean isArray() {
         return
             (!isBinary() && type.isArray());
+    }
+
+    @Override
+    public final boolean isUDT() {
+        return UDTRecord.class.isAssignableFrom(type);
     }
 
     // ------------------------------------------------------------------------

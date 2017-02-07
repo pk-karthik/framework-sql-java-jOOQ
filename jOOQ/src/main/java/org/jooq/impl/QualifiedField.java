@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,11 +31,10 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
+
+import static org.jooq.tools.StringUtils.defaultIfNull;
 
 import java.util.Arrays;
 
@@ -68,7 +64,7 @@ final class QualifiedField<T> extends AbstractField<T> implements TableField<Rec
     private final Table<Record> table;
 
     QualifiedField(Name name, DataType<T> type) {
-        super(name.getName()[name.getName().length - 1], type);
+        super(defaultIfNull(name.last(), ""), type);
 
         this.name = name;
         this.table = name.getName().length > 1

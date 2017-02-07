@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -69,9 +63,20 @@ extends AbstractDefinition {
     private static final JooqLogger log             = JooqLogger.getLogger(AbstractElementContainerDefinition.class);
 
     private List<E>                 elements;
+    private final PackageDefinition pkg;
 
     public AbstractElementContainerDefinition(SchemaDefinition schema, String name, String comment) {
+        this(schema, null, name, comment);
+    }
+
+    public AbstractElementContainerDefinition(SchemaDefinition schema, PackageDefinition pkg, String name, String comment) {
         super(schema.getDatabase(), schema, name, comment);
+
+        this.pkg = pkg;
+    }
+
+    public final PackageDefinition getPackage() {
+        return pkg;
     }
 
     @Override
@@ -79,6 +84,10 @@ extends AbstractDefinition {
         List<Definition> result = new ArrayList<Definition>();
 
         result.addAll(getSchema().getDefinitionPath());
+
+        if (pkg != null)
+            result.add(pkg);
+
         result.add(this);
 
         return result;

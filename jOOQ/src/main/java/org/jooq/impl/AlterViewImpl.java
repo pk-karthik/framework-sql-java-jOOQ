@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,16 +31,22 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
 
+import static java.util.Arrays.asList;
 import static org.jooq.Clause.ALTER_VIEW;
 import static org.jooq.Clause.ALTER_VIEW_RENAME;
 import static org.jooq.Clause.ALTER_VIEW_VIEW;
+// ...
+// ...
+import static org.jooq.SQLDialect.CUBRID;
+// ...
+import static org.jooq.SQLDialect.DERBY;
+import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.HSQLDB;
+// ...
+// ...
 import static org.jooq.impl.DSL.name;
 
 import org.jooq.AlterViewFinalStep;
@@ -108,13 +111,67 @@ final class AlterViewImpl extends AbstractQuery implements
     // XXX: QueryPart API
     // ------------------------------------------------------------------------
 
+    private final boolean supportsIfExists(Context<?> ctx) {
+        return !asList(CUBRID, DERBY, FIREBIRD).contains(ctx.family());
+    }
+
     @Override
     public final void accept(Context<?> ctx) {
+        if (ifExists && !supportsIfExists(ctx)) {
+            Tools.executeImmediateIfExistsBegin(ctx, DDLStatementType.ALTER_VIEW, view);
+            accept0(ctx);
+            Tools.executeImmediateIfExistsEnd(ctx, DDLStatementType.ALTER_VIEW, view);
+        }
+        else {
+            accept0(ctx);
+        }
+    }
+
+    private final void accept0(Context<?> ctx) {
+        switch (ctx.family()) {
+
+
+
+
+
+
+
+
+
+
+            default:
+                accept1(ctx);
+                break;
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private final void accept1(Context<?> ctx) {
         ctx.start(ALTER_VIEW_VIEW)
            .keyword("alter").sql(' ')
            .keyword(ctx.family() == HSQLDB ? "table" : "view");
 
-        if (ifExists)
+        if (ifExists && supportsIfExists(ctx))
             ctx.sql(' ').keyword("if exists");
 
         ctx.sql(' ').visit(view)

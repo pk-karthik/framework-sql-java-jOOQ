@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -83,6 +77,12 @@ public interface InsertOnDuplicateStep<R extends Record> extends InsertReturning
      */
     @Support({ POSTGRES_9_5 })
     InsertOnConflictDoUpdateStep<R> onConflict(Collection<? extends Field<?>> keys);
+
+    /**
+     * Add an <code>ON CONFLICT DO NOTHING</code> clause to this insert query.
+     */
+    @Support({ POSTGRES_9_5 })
+    InsertFinalStep<R> onConflictDoNothing();
 
     /**
      * Add an <code>ON DUPLICATE KEY UPDATE</code> clause to this insert query.

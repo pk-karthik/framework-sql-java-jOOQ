@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -72,6 +66,7 @@ import org.jooq.InsertQuery;
 import org.jooq.Merge;
 import org.jooq.MergeNotMatchedStep;
 import org.jooq.MergeOnConditionStep;
+import org.jooq.Operator;
 import org.jooq.QueryPart;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
@@ -84,22 +79,24 @@ import org.jooq.exception.SQLDialectNotSupportedException;
  */
 final class InsertQueryImpl<R extends Record> extends AbstractStoreQuery<R> implements InsertQuery<R> {
 
-    private static final long        serialVersionUID = 4466005417945353842L;
-    private static final Clause[]    CLAUSES          = { INSERT };
+    private static final long           serialVersionUID = 4466005417945353842L;
+    private static final Clause[]       CLAUSES          = { INSERT };
 
-    private final FieldMapForUpdate  updateMap;
-    private final FieldMapsForInsert insertMaps;
-    private Select<?>                select;
-    private boolean                  defaultValues;
-    private boolean                  onDuplicateKeyUpdate;
-    private boolean                  onDuplicateKeyIgnore;
-    private QueryPartList<Field<?>>  onConflict;
+    private final FieldMapForUpdate     updateMap;
+    private final FieldMapsForInsert    insertMaps;
+    private Select<?>                   select;
+    private boolean                     defaultValues;
+    private boolean                     onDuplicateKeyUpdate;
+    private boolean                     onDuplicateKeyIgnore;
+    private QueryPartList<Field<?>>     onConflict;
+    private final ConditionProviderImpl condition;
 
     InsertQueryImpl(Configuration configuration, WithImpl with, Table<R> into) {
         super(configuration, with, into);
 
         this.updateMap = new FieldMapForUpdate(INSERT_ON_DUPLICATE_KEY_UPDATE_ASSIGNMENT);
         this.insertMaps = new FieldMapsForInsert();
+        this.condition = new ConditionProviderImpl();
     }
 
     @Override
@@ -125,7 +122,6 @@ final class InsertQueryImpl<R extends Record> extends AbstractStoreQuery<R> impl
 
     @Override
     public final void onConflict(Collection<? extends Field<?>> fields) {
-        onDuplicateKeyUpdate(true);
         this.onConflict = new QueryPartList<Field<?>>(fields);
     }
 
@@ -133,14 +129,12 @@ final class InsertQueryImpl<R extends Record> extends AbstractStoreQuery<R> impl
     public final void onDuplicateKeyUpdate(boolean flag) {
         this.onDuplicateKeyIgnore = false;
         this.onDuplicateKeyUpdate = flag;
-        this.onConflict = null;
     }
 
     @Override
     public final void onDuplicateKeyIgnore(boolean flag) {
         this.onDuplicateKeyUpdate = false;
         this.onDuplicateKeyIgnore = flag;
-        this.onConflict = null;
     }
 
     @Override
@@ -156,6 +150,26 @@ final class InsertQueryImpl<R extends Record> extends AbstractStoreQuery<R> impl
     @Override
     public final void addValuesForUpdate(Map<? extends Field<?>, ?> map) {
         updateMap.set(map);
+    }
+
+    @Override
+    public final void addConditions(Condition... conditions) {
+        condition.addConditions(conditions);
+    }
+
+    @Override
+    public final void addConditions(Collection<? extends Condition> conditions) {
+        condition.addConditions(conditions);
+    }
+
+    @Override
+    public final void addConditions(Operator operator, Condition... conditions) {
+        condition.addConditions(operator, conditions);
+    }
+
+    @Override
+    public final void addConditions(Operator operator, Collection<? extends Condition> conditions) {
+        condition.addConditions(operator, conditions);
     }
 
     @Override
@@ -231,8 +245,15 @@ final class InsertQueryImpl<R extends Record> extends AbstractStoreQuery<R> impl
                        .sql(' ')
                        .formatIndentLockStart()
                        .visit(updateMap)
-                       .formatIndentLockEnd()
-                       .end(INSERT_ON_DUPLICATE_KEY_UPDATE);
+                       .formatIndentLockEnd();
+
+                    if (!(condition.getWhere() instanceof TrueCondition))
+                        ctx.formatSeparator()
+                           .keyword("where")
+                           .sql(' ')
+                           .visit(condition);
+
+                    ctx.end(INSERT_ON_DUPLICATE_KEY_UPDATE);
 
                     break;
                 }
@@ -280,7 +301,20 @@ final class InsertQueryImpl<R extends Record> extends AbstractStoreQuery<R> impl
                     toSQLInsert(ctx);
                     ctx.formatSeparator()
                        .start(INSERT_ON_DUPLICATE_KEY_UPDATE)
-                       .keyword("on conflict do nothing")
+                       .keyword("on conflict")
+                       .sql(' ');
+
+                    if (onConflict != null && onConflict.size() > 0) {
+                        boolean qualify = ctx.qualify();
+
+                        ctx.sql('(')
+                           .qualify(false)
+                           .visit(onConflict)
+                           .qualify(qualify)
+                           .sql(") ");
+                    }
+
+                    ctx.keyword("do nothing")
                        .end(INSERT_ON_DUPLICATE_KEY_UPDATE);
                     break;
                 }

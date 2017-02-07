@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,13 +31,11 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * An object representing a database catalog.
@@ -52,18 +47,25 @@ import java.util.List;
 public interface Catalog extends QueryPart {
 
     /**
-     * The name of this schema
+     * The name of this schema.
      */
     String getName();
 
     /**
-     * List all schemas contained in this catalog
+     * List all schemas contained in this catalog.
      */
     List<Schema> getSchemas();
 
     /**
      * Get a schema by its name (case-sensitive) in this catalog, or
-     * <code>null</code> if no such schema exists
+     * <code>null</code> if no such schema exists.
      */
     Schema getSchema(String name);
+
+
+    /**
+     * Stream all schemas contained in this catalog.
+     */
+    Stream<Schema> schemaStream();
+
 }

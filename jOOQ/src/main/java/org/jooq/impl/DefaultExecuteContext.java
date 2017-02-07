@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
 
@@ -56,6 +50,7 @@ import java.util.Map;
 
 import org.jooq.Configuration;
 import org.jooq.ConnectionProvider;
+import org.jooq.Constants;
 import org.jooq.DDLQuery;
 import org.jooq.Delete;
 import org.jooq.ExecuteContext;
@@ -646,6 +641,22 @@ class DefaultExecuteContext implements ExecuteContext {
     @Override
     public final void exception(RuntimeException e) {
         this.exception = e;
+
+        if (Boolean.TRUE.equals(settings().isDebugInfoOnStackTrace())) {
+
+            // [#5570] Add jOOQ version and SQL Dialect info on the stack trace
+            //         to help users write better bug reports.
+            //         See http://stackoverflow.com/q/39712695/521799
+            StackTraceElement[] oldStack = e.getStackTrace();
+            if (oldStack != null) {
+                StackTraceElement[] newStack = new StackTraceElement[oldStack.length + 1];
+                System.arraycopy(oldStack, 0, newStack, 1, oldStack.length);
+                newStack[0] = new StackTraceElement(
+                    "org.jooq_" + Constants.VERSION + "." + dialect(),
+                    "debug", null, -1);
+                e.setStackTrace(newStack);
+            }
+        }
     }
 
     @Override

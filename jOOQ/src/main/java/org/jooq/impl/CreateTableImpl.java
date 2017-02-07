@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -266,6 +260,21 @@ final class CreateTableImpl<R extends Record> extends AbstractQuery implements
                 }
                 else {
                     ctx.sql(' ').keyword("not null");
+                }
+
+                if (type.identity()) {
+
+                    // [#5062] H2's (and others') AUTO_INCREMENT flag is syntactically located *after* NULL flags.
+                    switch (ctx.family()) {
+
+
+
+
+
+                        case H2:
+                        case MARIADB:
+                        case MYSQL:  ctx.sql(' ').keyword("auto_increment"); break;
+                    }
                 }
 
                 if (!asList(HSQLDB).contains(ctx.family()))

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -402,27 +396,27 @@ public static void main(String[] args) {
 
     @Override
     public final List<Catalog> getCatalogs() {
-        return unmodifiableList(catalogs);
+        return Collections.<Catalog>unmodifiableList(catalogs);
     }
 
     @Override
     public final List<Schema> getSchemas() {
-        return unmodifiableList(schemas);
+        return Collections.<Schema>unmodifiableList(schemas);
     }
 
     @Override
     public final List<Table<?>> getTables() {
-        return unmodifiableList(tables);
+        return Collections.<Table<?>>unmodifiableList(tables);
     }
 
     @Override
     public final List<Sequence<?>> getSequences() {
-        return unmodifiableList(sequences);
+        return Collections.<Sequence<?>>unmodifiableList(sequences);
     }
 
     @Override
     public final List<UniqueKey<?>> getPrimaryKeys() {
-        return unmodifiableList(primaryKeys);
+        return Collections.<UniqueKey<?>>unmodifiableList(primaryKeys);
     }
 
     private final class InformationSchemaCatalog extends CatalogImpl {
@@ -455,12 +449,12 @@ public static void main(String[] args) {
 
         @Override
         public final List<Table<?>> getTables() {
-            return unmodifiableList(tablesPerSchema.get(this));
+            return Collections.<Table<?>>unmodifiableList(tablesPerSchema.get(this));
         }
 
         @Override
         public final List<Sequence<?>> getSequences() {
-            return unmodifiableList(sequencesPerSchema.get(this));
+            return Collections.<Sequence<?>>unmodifiableList(sequencesPerSchema.get(this));
         }
     }
 
@@ -486,12 +480,12 @@ public static void main(String[] args) {
 
         @Override
         public List<UniqueKey<Record>> getKeys() {
-            return Collections.unmodifiableList(uniqueKeys);
+            return Collections.<UniqueKey<Record>>unmodifiableList(uniqueKeys);
         }
 
         @Override
         public List<ForeignKey<Record, ?>> getReferences() {
-            return Collections.unmodifiableList(foreignKeys);
+            return Collections.<ForeignKey<Record, ?>>unmodifiableList(foreignKeys);
         }
     }
 

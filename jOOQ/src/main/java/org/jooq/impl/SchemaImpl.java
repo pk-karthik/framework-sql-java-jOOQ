@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 
 package org.jooq.impl;
@@ -46,6 +40,7 @@ import static org.jooq.Clause.SCHEMA_REFERENCE;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.jooq.Catalog;
 import org.jooq.Clause;
@@ -179,6 +174,23 @@ public class SchemaImpl extends AbstractQueryPart implements Schema {
     public List<Sequence<?>> getSequences() {
         return Collections.emptyList();
     }
+
+
+    @Override
+    public final Stream<Table<?>> tableStream() {
+        return getTables().stream();
+    }
+
+    @Override
+    public final Stream<UDT<?>> udtStream() {
+        return getUDTs().stream();
+    }
+
+    @Override
+    public final Stream<Sequence<?>> sequenceStream() {
+        return getSequences().stream();
+    }
+
 
     // ------------------------------------------------------------------------
     // XXX: Object API

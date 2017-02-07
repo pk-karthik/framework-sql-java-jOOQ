@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -1003,9 +997,9 @@ public interface Result<R extends Record> extends List<R>, Attachable {
      * non-unique in the result set. Use {@link #intoGroups(String, String)}
      * instead, if your keys are non-unique
      *
-     * @param key The key field name. Client code must assure that this field is
-     *            unique in the result set.
-     * @param value The value field name
+     * @param keyFieldName The key field name. Client code must assure that this
+     *            field is unique in the result set.
+     * @param valueFieldName The value field name
      * @return A Map containing the results
      * @throws IllegalArgumentException If any of the argument field names is
      *             not contained in {@link #fieldsRow()}
@@ -1023,9 +1017,9 @@ public interface Result<R extends Record> extends List<R>, Attachable {
      * non-unique in the result set. Use {@link #intoGroups(Name, Name)}
      * instead, if your keys are non-unique
      *
-     * @param key The key field name. Client code must assure that this field is
-     *            unique in the result set.
-     * @param value The value field name
+     * @param keyFieldName The key field name. Client code must assure that this
+     *            field is unique in the result set.
+     * @param valueFieldName The value field name
      * @return A Map containing the results
      * @throws IllegalArgumentException If any of the argument field names is
      *             not contained in {@link #fieldsRow()}

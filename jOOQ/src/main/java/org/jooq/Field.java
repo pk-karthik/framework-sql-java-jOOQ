@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -1200,12 +1194,14 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * SQL: <code>this like value</code>
      */
     @Support
-    Condition like(Field<String> value);
+    LikeEscapeStep like(Field<String> value);
 
     /**
      * Create a condition to pattern-check this field against a value.
      * <p>
      * SQL: <code>this like value escape 'e'</code>
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition like(Field<String> value, char escape);
@@ -1216,12 +1212,14 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * SQL: <code>this like value</code>
      */
     @Support
-    Condition like(String value);
+    LikeEscapeStep like(String value);
 
     /**
      * Create a condition to pattern-check this field against a value.
      * <p>
      * SQL: <code>this like value escape 'e'</code>
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition like(String value, char escape);
@@ -1235,7 +1233,7 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * <code>lower(this) like lower(field)</code> in all other dialects.
      */
     @Support
-    Condition likeIgnoreCase(Field<String> field);
+    LikeEscapeStep likeIgnoreCase(Field<String> field);
 
     /**
      * Create a condition to case-insensitively pattern-check this field against
@@ -1244,6 +1242,8 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * This translates to <code>this ilike field</code> in
      * {@link SQLDialect#POSTGRES}, or to
      * <code>lower(this) like lower(field)</code> in all other dialects.
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition likeIgnoreCase(Field<String> field, char escape);
@@ -1257,7 +1257,7 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * <code>lower(this) like lower(value)</code> in all other dialects.
      */
     @Support
-    Condition likeIgnoreCase(String value);
+    LikeEscapeStep likeIgnoreCase(String value);
 
     /**
      * Create a condition to case-insensitively pattern-check this field against
@@ -1266,6 +1266,8 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * This translates to <code>this ilike value</code> in
      * {@link SQLDialect#POSTGRES}, or to
      * <code>lower(this) like lower(value)</code> in all other dialects.
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition likeIgnoreCase(String value, char escape);
@@ -1276,12 +1278,14 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * SQL: <code>this not like field</code>
      */
     @Support
-    Condition notLike(Field<String> field);
+    LikeEscapeStep notLike(Field<String> field);
 
     /**
      * Create a condition to pattern-check this field against a field.
      * <p>
      * SQL: <code>this not like field escape 'e'</code>
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition notLike(Field<String> field, char escape);
@@ -1292,12 +1296,14 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * SQL: <code>this not like value</code>
      */
     @Support
-    Condition notLike(String value);
+    LikeEscapeStep notLike(String value);
 
     /**
      * Create a condition to pattern-check this field against a value.
      * <p>
      * SQL: <code>this not like value escape 'e'</code>
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition notLike(String value, char escape);
@@ -1311,7 +1317,7 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * <code>lower(this) not like lower(field)</code> in all other dialects.
      */
     @Support
-    Condition notLikeIgnoreCase(Field<String> field);
+    LikeEscapeStep notLikeIgnoreCase(Field<String> field);
 
     /**
      * Create a condition to case-insensitively pattern-check this field against
@@ -1320,6 +1326,8 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * This translates to <code>this not ilike field</code> in
      * {@link SQLDialect#POSTGRES}, or to
      * <code>lower(this) not like lower(field)</code> in all other dialects.
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition notLikeIgnoreCase(Field<String> field, char escape);
@@ -1333,7 +1341,7 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * <code>lower(this) not like lower(value)</code> in all other dialects.
      */
     @Support
-    Condition notLikeIgnoreCase(String value);
+    LikeEscapeStep notLikeIgnoreCase(String value);
 
     /**
      * Create a condition to case-insensitively pattern-check this field against
@@ -1342,6 +1350,8 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * This translates to <code>this not ilike value</code> in
      * {@link SQLDialect#POSTGRES}, or to
      * <code>lower(this) not like lower(value)</code> in all other dialects.
+     *
+     * @see LikeEscapeStep#escape(char)
      */
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition notLikeIgnoreCase(String value, char escape);
@@ -1399,6 +1409,18 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      */
     @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     Condition contains(Field<T> value);
+
+    /**
+     * Inverse of {@link #contains(Object)}.
+     */
+    @Support
+    Condition notContains(T value);
+
+    /**
+     * Inverse of {@link #contains(Field)}.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    Condition notContains(Field<T> value);
 
     /**
      * Convenience method for {@link #like(String, char)} including proper
@@ -1468,6 +1490,19 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * Create a condition to check this field against several values.
      * <p>
      * SQL: <code>this in (values...)</code>
+     * <p>
+     * Note that generating dynamic SQL with arbitrary-length <code>IN</code>
+     * predicates can cause cursor cache contention in some databases that use
+     * unique SQL strings as a statement identifier (e.g.
+     * {@link SQLDialect#ORACLE}). In order to prevent such problems, you could
+     * use {@link Settings#isInListPadding()} to produce less distinct SQL
+     * strings (see also
+     * <a href="https://github.com/jOOQ/jOOQ/issues/5600">[#5600]</a>), or you
+     * could avoid <code>IN</code> lists, and replace them with:
+     * <ul>
+     * <li><code>IN</code> predicates on temporary tables</li>
+     * <li><code>IN</code> predicates on unnested array bind variables</li>
+     * </ul>
      */
     @Support
     Condition in(Collection<?> values);
@@ -1477,6 +1512,19 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * previous query.
      * <p>
      * SQL: <code>this in (values...)</code>
+     * <p>
+     * Note that generating dynamic SQL with arbitrary-length <code>IN</code>
+     * predicates can cause cursor cache contention in some databases that use
+     * unique SQL strings as a statement identifier (e.g.
+     * {@link SQLDialect#ORACLE}). In order to prevent such problems, you could
+     * use {@link Settings#isInListPadding()} to produce less distinct SQL
+     * strings (see also
+     * <a href="https://github.com/jOOQ/jOOQ/issues/5600">[#5600]</a>), or you
+     * could avoid <code>IN</code> lists, and replace them with:
+     * <ul>
+     * <li><code>IN</code> predicates on temporary tables</li>
+     * <li><code>IN</code> predicates on unnested array bind variables</li>
+     * </ul>
      */
     Condition in(Result<? extends Record1<T>> result);
 
@@ -1484,6 +1532,19 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * Create a condition to check this field against several values.
      * <p>
      * SQL: <code>this in (values...)</code>
+     * <p>
+     * Note that generating dynamic SQL with arbitrary-length <code>IN</code>
+     * predicates can cause cursor cache contention in some databases that use
+     * unique SQL strings as a statement identifier (e.g.
+     * {@link SQLDialect#ORACLE}). In order to prevent such problems, you could
+     * use {@link Settings#isInListPadding()} to produce less distinct SQL
+     * strings (see also
+     * <a href="https://github.com/jOOQ/jOOQ/issues/5600">[#5600]</a>), or you
+     * could avoid <code>IN</code> lists, and replace them with:
+     * <ul>
+     * <li><code>IN</code> predicates on temporary tables</li>
+     * <li><code>IN</code> predicates on unnested array bind variables</li>
+     * </ul>
      */
     @Support
     Condition in(T... values);
@@ -1516,6 +1577,19 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
      * SQL: <code>this not in (values...)</code>
+     * <p>
+     * Note that generating dynamic SQL with arbitrary-length
+     * <code>NOT IN</code> predicates can cause cursor cache contention in some
+     * databases that use unique SQL strings as a statement identifier (e.g.
+     * {@link SQLDialect#ORACLE}). In order to prevent such problems, you could
+     * use {@link Settings#isInListPadding()} to produce less distinct SQL
+     * strings (see also
+     * <a href="https://github.com/jOOQ/jOOQ/issues/5600">[#5600]</a>), or you
+     * could avoid <code>IN</code> lists, and replace them with:
+     * <ul>
+     * <li><code>NOT IN</code> predicates on temporary tables</li>
+     * <li><code>NOT IN</code> predicates on unnested array bind variables</li>
+     * </ul>
      */
     @Support
     Condition notIn(Collection<?> values);
@@ -1529,6 +1603,19 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
      * SQL: <code>this in (values...)</code>
+     * <p>
+     * Note that generating dynamic SQL with arbitrary-length
+     * <code>NOT IN</code> predicates can cause cursor cache contention in some
+     * databases that use unique SQL strings as a statement identifier (e.g.
+     * {@link SQLDialect#ORACLE}). In order to prevent such problems, you could
+     * use {@link Settings#isInListPadding()} to produce less distinct SQL
+     * strings (see also
+     * <a href="https://github.com/jOOQ/jOOQ/issues/5600">[#5600]</a>), or you
+     * could avoid <code>IN</code> lists, and replace them with:
+     * <ul>
+     * <li><code>NOT IN</code> predicates on temporary tables</li>
+     * <li><code>NOT IN</code> predicates on unnested array bind variables</li>
+     * </ul>
      */
     Condition notIn(Result<? extends Record1<T>> result);
 
@@ -1540,6 +1627,19 @@ public interface Field<T> extends SelectField<T>, GroupField, FieldOrRow {
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
      * SQL: <code>this not in (values...)</code>
+     * <p>
+     * Note that generating dynamic SQL with arbitrary-length
+     * <code>NOT IN</code> predicates can cause cursor cache contention in some
+     * databases that use unique SQL strings as a statement identifier (e.g.
+     * {@link SQLDialect#ORACLE}). In order to prevent such problems, you could
+     * use {@link Settings#isInListPadding()} to produce less distinct SQL
+     * strings (see also
+     * <a href="https://github.com/jOOQ/jOOQ/issues/5600">[#5600]</a>), or you
+     * could avoid <code>IN</code> lists, and replace them with:
+     * <ul>
+     * <li><code>NOT IN</code> predicates on temporary tables</li>
+     * <li><code>NOT IN</code> predicates on unnested array bind variables</li>
+     * </ul>
      */
     @Support
     Condition notIn(T... values);

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,12 +31,10 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
+import static org.jooq.SQLDialect.POSTGRES;
 // ...
 
 import java.util.Collection;
@@ -53,87 +48,85 @@ import org.jooq.impl.DSL;
  */
 public interface CreateIndexWhereStep extends CreateIndexFinalStep {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index, connecting
+     * them with each other with {@link Operator#AND}.
+     */
+    @Support({ POSTGRES })
+    CreateIndexFinalStep where(Condition... conditions);
+
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index, connecting
+     * them with each other with {@link Operator#AND}.
+     */
+    @Support({ POSTGRES })
+    CreateIndexFinalStep where(Collection<? extends Condition> conditions);
+
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index.
+     */
+    @Support({ POSTGRES })
+    CreateIndexFinalStep where(Field<Boolean> field);
+
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @see DSL#condition(SQL)
+     * @see SQL
+     */
+    @Support({ POSTGRES })
+    @PlainSQL
+    CreateIndexFinalStep where(SQL sql);
+
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @see DSL#condition(String)
+     * @see SQL
+     */
+    @Support({ POSTGRES })
+    @PlainSQL
+    CreateIndexFinalStep where(String sql);
+
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @see DSL#condition(String, Object...)
+     * @see DSL#sql(String, Object...)
+     * @see SQL
+     */
+    @Support({ POSTGRES })
+    @PlainSQL
+    CreateIndexFinalStep where(String sql, Object... bindings);
+
+    /**
+     * Add a <code>WHERE</code> clause to create a partial index.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @see DSL#condition(String, QueryPart...)
+     * @see DSL#sql(String, QueryPart...)
+     * @see SQL
+     */
+    @Support({ POSTGRES })
+    @PlainSQL
+    CreateIndexFinalStep where(String sql, QueryPart... parts);
 }

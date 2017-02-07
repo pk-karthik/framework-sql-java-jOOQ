@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,14 +31,18 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
 /**
  * An <code>FunctionalInterface</code> that wraps transactional code.
+ * <p>
+ * Transactional code should not depend on any captured scope, but use the
+ * argument {@link Configuration} passed to the {@link #run(Configuration)}
+ * method to derive its transaction context.
+ * <p>
+ * If transactional code needs to depend on captured scope ("context"), then
+ * {@link ContextTransactionalRunnable} is a better fit.
  *
  * @author Lukas Eder
  */

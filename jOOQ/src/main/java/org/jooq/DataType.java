@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -74,6 +68,11 @@ public interface DataType<T> extends Serializable {
      * Get JDBC {@link Types} value.
      */
     int getSQLType();
+
+    /**
+     * Get the dialect-specific JDBC {@link Types} value.
+     */
+    int getSQLType(Configuration configuration);
 
     /**
      * Get the data type binding associated with this data type.
@@ -192,6 +191,8 @@ public interface DataType<T> extends Serializable {
 
     /**
      * Return a new data type like this, with a new nullability.
+     * <p>
+     * [#5709] A <code>nullable</code> column cannot have an {@link #identity()}.
      *
      * @param nullable The new nullability
      * @return The new data type
@@ -206,8 +207,28 @@ public interface DataType<T> extends Serializable {
     boolean nullable();
 
     /**
+     * Return a new data type like this, with a new identity flag.
+     * <p>
+     * [#5709] The IDENTITY flag imposes a NOT NULL constraint, and removes all
+     * DEFAULT values.
+     *
+     * @param identity The new identity flag
+     * @return The new data type
+     */
+    DataType<T> identity(boolean identity);
+
+    /**
+     * Get the identity flag of this data type.
+     *
+     * @return The identity flag.
+     */
+    boolean identity();
+
+    /**
      * Specify an expression to be applied as the <code>DEFAULT</code> value for
      * this data type.
+     * <p>
+     * [#5709] A <code>defaulted</code> column cannot have an {@link #identity()}.
      *
      * @see #defaultValue(Field)
      */
@@ -459,4 +480,9 @@ public interface DataType<T> extends Serializable {
      * Whether this data type is an array type.
      */
     boolean isArray();
+
+    /**
+     * Whether this data type is a UDT type.
+     */
+    boolean isUDT();
 }

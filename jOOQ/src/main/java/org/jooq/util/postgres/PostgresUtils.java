@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util.postgres;
 
@@ -50,6 +44,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.jooq.Converter;
@@ -266,10 +261,27 @@ public class PostgresUtils {
     }
 
     /**
-     * Tokenize a PGObject input string
+     * Tokenize a PGObject input string.
+     */
+    public static List<String> toPGArray(String input) {
+        if ("{}".equals(input))
+            return Collections.emptyList();
+
+        return toPGObjectOrArray(input, '{', '}');
+    }
+
+    /**
+     * Tokenize a PGObject input string.
+     */
+    public static List<String> toPGObject(String input) {
+        return toPGObjectOrArray(input, '(', ')');
+    }
+
+    /**
+     * Tokenize a PGObject input string.
      */
     @SuppressWarnings("null")
-    public static List<String> toPGObject(String input) {
+    private static List<String> toPGObjectOrArray(String input, char open, char close) {
         List<String> values = new ArrayList<String>();
         int i = 0;
         int state = PG_OBJECT_INIT;
@@ -282,8 +294,8 @@ public class PostgresUtils {
                 // Initial state
                 case PG_OBJECT_INIT:
 
-                    // Consume the opening parenthesis
-                    if (c == '(') {
+                    // Consume the opening bracket
+                    if (c == open) {
                         state = PG_OBJECT_BEFORE_VALUE;
                     }
 
@@ -300,7 +312,7 @@ public class PostgresUtils {
                     }
 
                     // Consume "empty"
-                    else if (c == ')') {
+                    else if (c == close) {
                         values.add(null);
                         state = PG_OBJECT_END;
                     }
@@ -370,8 +382,8 @@ public class PostgresUtils {
                 // A value is being created
                 case PG_OBJECT_UNQUOTED_VALUE:
 
-                    // Consume the closing parenthesis
-                    if (c == ')') {
+                    // Consume the closing bracket
+                    if (c == close) {
                         values.add(sb.toString());
                         state = PG_OBJECT_END;
                     }
@@ -392,8 +404,8 @@ public class PostgresUtils {
                 // A value was just added
                 case PG_OBJECT_AFTER_VALUE:
 
-                    // Consume the closing parenthesis
-                    if (c == ')') {
+                    // Consume the closing bracket
+                    if (c == close) {
                         state = PG_OBJECT_END;
                     }
 

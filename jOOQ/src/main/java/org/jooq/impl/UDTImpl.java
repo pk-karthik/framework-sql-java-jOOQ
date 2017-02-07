@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,11 +31,10 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
+
+import java.util.stream.Stream;
 
 import org.jooq.Binding;
 import org.jooq.Catalog;
@@ -48,6 +44,7 @@ import org.jooq.Converter;
 import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.Name;
+import org.jooq.Package;
 import org.jooq.Record;
 import org.jooq.Row;
 import org.jooq.Schema;
@@ -69,12 +66,18 @@ public class UDTImpl<R extends UDTRecord<R>> extends AbstractQueryPart implement
     private final Schema          schema;
     private final String          name;
     private final Fields<R>       fields;
+    private final Package         pkg;
     private transient DataType<R> type;
 
     public UDTImpl(String name, Schema schema) {
+        this(name, schema, null);
+    }
+
+    public UDTImpl(String name, Schema schema, Package pkg) {
         this.fields = new Fields<R>();
         this.name = name;
         this.schema = schema;
+        this.pkg = pkg;
     }
 
     @Override
@@ -88,6 +91,11 @@ public class UDTImpl<R extends UDTRecord<R>> extends AbstractQueryPart implement
     }
 
     @Override
+    public final Package getPackage() {
+        return pkg;
+    }
+
+    @Override
     public final String getName() {
         return name;
     }
@@ -97,6 +105,13 @@ public class UDTImpl<R extends UDTRecord<R>> extends AbstractQueryPart implement
     public final Row fieldsRow() {
         return new RowImpl(fields);
     }
+
+
+    @Override
+    public final Stream<Field<?>> fieldStream() {
+        return Stream.of(fields());
+    }
+
 
     @Override
     public final <T> Field<T> field(Field<T> field) {
@@ -157,6 +172,11 @@ public class UDTImpl<R extends UDTRecord<R>> extends AbstractQueryPart implement
     }
 
     @Override
+    public final boolean isSQLUsable() {
+        return pkg == null;
+    }
+
+    @Override
     public final R newRecord() {
         return DSL.using(new DefaultConfiguration()).newRecord(this);
     }
@@ -176,6 +196,11 @@ public class UDTImpl<R extends UDTRecord<R>> extends AbstractQueryPart implement
 
         if (mappedSchema != null) {
             ctx.visit(mappedSchema);
+            ctx.sql('.');
+        }
+
+        if (getPackage() != null) {
+            ctx.visit(getPackage());
             ctx.sql('.');
         }
 

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -221,6 +215,54 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R> 
      */
     @Support({ CUBRID, HSQLDB, MARIADB, MYSQL, POSTGRES_9_5 })
     void addValuesForUpdate(Map<? extends Field<?>, ?> map);
+
+    /**
+     * Adds new conditions to the query, connecting them to existing conditions
+     * with {@link Operator#AND}.
+     * <p>
+     * This is for use with {@link SQLDialect#POSTGRES}'s
+     * {@link #onConflict(Field...)} clause.
+     *
+     * @param conditions The condition
+     */
+    @Support({ POSTGRES_9_5 })
+    void addConditions(Condition... conditions);
+
+    /**
+     * Adds new conditions to the query, connecting them to existing
+     * conditions with {@link Operator#AND}.
+     * <p>
+     * This is for use with {@link SQLDialect#POSTGRES}'s
+     * {@link #onConflict(Field...)} clause.
+     *
+     * @param conditions The condition
+     */
+    @Support({ POSTGRES_9_5 })
+    void addConditions(Collection<? extends Condition> conditions);
+
+    /**
+     * Adds new conditions to the query, connecting them to existing
+     * conditions with the provided operator.
+     * <p>
+     * This is for use with {@link SQLDialect#POSTGRES}'s
+     * {@link #onConflict(Field...)} clause.
+     *
+     * @param conditions The condition
+     */
+    @Support({ POSTGRES_9_5 })
+    void addConditions(Operator operator, Condition... conditions);
+
+    /**
+     * Adds new conditions to the query, connecting them to existing
+     * conditions with the provided operator.
+     * <p>
+     * This is for use with {@link SQLDialect#POSTGRES}'s
+     * {@link #onConflict(Field...)} clause.
+     *
+     * @param conditions The condition
+     */
+    @Support({ POSTGRES_9_5 })
+    void addConditions(Operator operator, Collection<? extends Condition> conditions);
 
     /**
      * Set an empty record with the <code>DEFAULT VALUES</code> clause.

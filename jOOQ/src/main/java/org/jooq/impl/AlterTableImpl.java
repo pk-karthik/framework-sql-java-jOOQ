@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
 
@@ -50,10 +44,15 @@ import static org.jooq.Clause.ALTER_TABLE_RENAME;
 import static org.jooq.Clause.ALTER_TABLE_RENAME_COLUMN;
 import static org.jooq.Clause.ALTER_TABLE_RENAME_CONSTRAINT;
 import static org.jooq.Clause.ALTER_TABLE_TABLE;
+// ...
+// ...
+import static org.jooq.SQLDialect.CUBRID;
+// ...
 import static org.jooq.SQLDialect.DERBY;
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
+// ...
 // ...
 import static org.jooq.impl.DSL.constraint;
 import static org.jooq.impl.DSL.field;
@@ -381,34 +380,49 @@ final class AlterTableImpl extends AbstractQuery implements
     // XXX: QueryPart API
     // ------------------------------------------------------------------------
 
+    private final boolean supportsIfExists(Context<?> ctx) {
+        return !asList(CUBRID, DERBY, FIREBIRD).contains(ctx.family());
+    }
+
     @Override
     public final void accept(Context<?> ctx) {
-        SQLDialect family = ctx.configuration().dialect().family();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        accept0(ctx);
+        if (ifExists && !supportsIfExists(ctx)) {
+            Tools.executeImmediateIfExistsBegin(ctx, DDLStatementType.ALTER_TABLE, table);
+            accept0(ctx);
+            Tools.executeImmediateIfExistsEnd(ctx, DDLStatementType.ALTER_TABLE, table);
+        }
+        else {
+            accept0(ctx);
+        }
     }
 
     private final void accept0(Context<?> ctx) {
+        SQLDialect family = ctx.family();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        accept1(ctx);
+    }
+
+    private final void accept1(Context<?> ctx) {
         SQLDialect family = ctx.family();
 
         boolean omitAlterTable =
@@ -418,7 +432,7 @@ final class AlterTableImpl extends AbstractQuery implements
             ctx.start(ALTER_TABLE_TABLE)
                .keyword("alter table");
 
-            if (ifExists)
+            if (ifExists && supportsIfExists(ctx))
                 ctx.sql(' ').keyword("if exists");
 
             ctx.sql(' ').visit(table)

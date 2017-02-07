@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -67,6 +61,7 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListenerProvider;
+import org.jooq.Name;
 import org.jooq.Query;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
@@ -81,6 +76,7 @@ import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StopWatch;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.csv.CSVReader;
+import org.jooq.util.jaxb.Catalog;
 import org.jooq.util.jaxb.CustomType;
 import org.jooq.util.jaxb.EnumType;
 import org.jooq.util.jaxb.ForcedType;
@@ -125,6 +121,7 @@ public abstract class AbstractDatabase implements Database {
     private boolean                                                          supportsUnsignedTypes;
     private boolean                                                          ignoreProcedureReturnValues;
     private boolean                                                          dateAsTimestamp;
+    private List<Catalog>                                                    configuredCatalogs;
     private List<Schema>                                                     configuredSchemata;
     private List<CustomType>                                                 configuredCustomTypes;
     private List<EnumType>                                                   configuredEnumTypes;
@@ -136,7 +133,9 @@ public abstract class AbstractDatabase implements Database {
     // Loaded definitions
     // -------------------------------------------------------------------------
 
+    private List<String>                                                     inputCatalogs;
     private List<String>                                                     inputSchemata;
+    private Map<String, List<String>>                                        inputSchemataPerCatalog;
     private List<CatalogDefinition>                                          catalogs;
     private List<SchemaDefinition>                                           schemata;
     private List<SequenceDefinition>                                         sequences;
@@ -411,7 +410,7 @@ public abstract class AbstractDatabase implements Database {
             if (schemata.isEmpty())
                 log.warn(
                     "No schemata were loaded",
-                    "Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputSchema/> elements : " + inputSchemata);
+                    "Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputSchema/> elements : " + inputSchemataPerCatalog);
         }
 
         return schemata;
@@ -430,33 +429,61 @@ public abstract class AbstractDatabase implements Database {
 
     @Override
     public final SchemaDefinition getSchema(String inputName) {
-        for (SchemaDefinition schema : getSchemata()) {
-            if (schema.getName().equals(inputName)) {
+        for (SchemaDefinition schema : getSchemata())
+            if (schema.getName().equals(inputName))
                 return schema;
-            }
-        }
 
         return null;
     }
 
     @Override
-    public final List<String> getInputSchemata() {
-        if (inputSchemata == null) {
-            inputSchemata = new ArrayList<String>();
+    public final List<String> getInputCatalogs() {
+        if (inputCatalogs == null) {
+            inputCatalogs = new ArrayList<String>();
 
             // [#1312] Allow for ommitting inputSchema configuration. Generate
-            // All schemata instead
-            if (configuredSchemata.size() == 1 && StringUtils.isBlank(configuredSchemata.get(0).getInputSchema())) {
+            // All catalogs instead
+            if (configuredCatalogs.size() == 1 && StringUtils.isBlank(configuredCatalogs.get(0).getInputCatalog())) {
                 try {
-                    for (SchemaDefinition schema : getSchemata0()) {
-                        inputSchemata.add(schema.getName());
-                    }
+                    for (CatalogDefinition catalog : getCatalogs0())
+                        inputCatalogs.add(catalog.getName());
                 }
                 catch (Exception e) {
-                    log.error("Could not load schemata", e);
+                    log.error("Could not load catalogs", e);
                 }
             }
             else {
+                for (Catalog catalog : configuredCatalogs) {
+
+
+
+
+
+                    inputCatalogs.add(catalog.getInputCatalog());
+                }
+            }
+        }
+
+        return inputCatalogs;
+    }
+
+    @Override
+    public final List<String> getInputSchemata() {
+        if (inputSchemataPerCatalog == null) {
+            inputSchemata = new ArrayList<String>();
+            inputSchemataPerCatalog = new LinkedHashMap<String, List<String>>();
+
+            // [#1312] Allow for ommitting inputSchema configuration. Generate all schemata instead.
+            if (configuredSchemata.size() == 1 && StringUtils.isBlank(configuredSchemata.get(0).getInputSchema())) {
+                initAllSchemata();
+            }
+            else if (configuredCatalogs.size() == 1 && StringUtils.isBlank(configuredCatalogs.get(0).getInputCatalog())
+                  && configuredCatalogs.get(0).getSchemata().size() == 1 && StringUtils.isBlank(configuredCatalogs.get(0).getSchemata().get(0).getInputSchema())) {
+                initAllSchemata();
+            }
+            else if (configuredCatalogs.isEmpty()) {
+                inputSchemataPerCatalog.put("", inputSchemata);
+
                 for (Schema schema : configuredSchemata) {
 
 
@@ -471,21 +498,108 @@ public abstract class AbstractDatabase implements Database {
                     }
                 }
             }
+            else {
+                for (Catalog catalog : configuredCatalogs) {
+                    for (Schema schema : catalog.getSchemata()) {
+                        String inputSchema;
+
+
+
+
+
+
+
+
+
+                        {
+                            inputSchema = schema.getInputSchema();
+                        }
+
+                        inputSchemata.add(inputSchema);
+                        List<String> list = inputSchemataPerCatalog.get(catalog.getInputCatalog());
+
+                        if (list == null) {
+                            list = new ArrayList<String>();
+                            inputSchemataPerCatalog.put(catalog.getInputCatalog(), list);
+                        }
+
+                        list.add(inputSchema);
+                    }
+                }
+            }
         }
 
         return inputSchemata;
     }
 
+    private void initAllSchemata() {
+        try {
+            for (SchemaDefinition schema : getSchemata0()) {
+                inputSchemata.add(schema.getName());
+                List<String> list = inputSchemataPerCatalog.get(schema.getCatalog().getName());
+
+                if (list == null) {
+                    list = new ArrayList<String>();
+                    inputSchemataPerCatalog.put(schema.getCatalog().getName(), list);
+                }
+
+                list.add(schema.getName());
+            }
+        }
+        catch (Exception e) {
+            log.error("Could not load schemata", e);
+        }
+    }
+
+    @Override
+    public final List<String> getInputSchemata(CatalogDefinition catalog) {
+        return getInputSchemata(catalog.getInputName());
+    }
+
+    @Override
+    public final List<String> getInputSchemata(String catalog) {
+
+        // Init if necessary
+        getInputSchemata();
+        return inputSchemataPerCatalog.containsKey(catalog)
+            ? inputSchemataPerCatalog.get(catalog)
+            : Collections.<String>emptyList();
+    }
+
+    @Override
+    @Deprecated
+    public String getOutputCatalog(String inputCatalog) {
+        for (Catalog catalog : configuredCatalogs)
+            if (inputCatalog.equals(catalog.getInputCatalog()))
+                return catalog.getOutputCatalog();
+
+        return inputCatalog;
+    }
+
     @Override
     @Deprecated
     public String getOutputSchema(String inputSchema) {
-        for (Schema schema : configuredSchemata) {
-            if (inputSchema.equals(schema.getInputSchema())) {
+        for (Schema schema : configuredSchemata)
+            if (inputSchema.equals(schema.getInputSchema()))
                 return schema.getOutputSchema();
-            }
-        }
 
         return inputSchema;
+    }
+
+    @Override
+    public String getOutputSchema(String inputCatalog, String inputSchema) {
+        for (Catalog catalog : configuredCatalogs)
+            if (inputCatalog.equals(catalog.getInputCatalog()))
+                for (Schema schema : catalog.getSchemata())
+                    if (inputSchema.equals(schema.getInputSchema()))
+                        return schema.getOutputSchema();
+
+        return inputSchema;
+    }
+
+    @Override
+    public final void setConfiguredCatalogs(List<Catalog> catalogs) {
+        this.configuredCatalogs = catalogs;
     }
 
     @Override
@@ -728,11 +842,16 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
+    @Deprecated
     public final void setConfiguredCustomTypes(List<CustomType> configuredCustomTypes) {
+        if (!configuredCustomTypes.isEmpty())
+            log.warn("DEPRECATION", "The <customTypes/> configuration element has been deprecated in jOOQ 3.10. Use <forcedTypes/> only, instead.");
+
         this.configuredCustomTypes = configuredCustomTypes;
     }
 
     @Override
+    @Deprecated
     public final List<CustomType> getConfiguredCustomTypes() {
         if (configuredCustomTypes == null) {
             configuredCustomTypes = new ArrayList<CustomType>();
@@ -742,6 +861,7 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
+    @Deprecated
     public final CustomType getConfiguredCustomType(String typeName) {
 
         // The user type name that is passed here can be null.
@@ -779,21 +899,31 @@ public abstract class AbstractDatabase implements Database {
 
             if (StringUtils.isBlank(type.getName())) {
                 if (StringUtils.isBlank(type.getUserType())) {
-                    StringWriter writer = new StringWriter();
-                    JAXB.marshal(type, writer);
-                    log.warn("Bad configuration for <forcedType/>. Either <name/> or <userType/> is required: " + writer.toString());
+                    log.warn("Bad configuration for <forcedType/>. Either <name/> or <userType/> is required: " + toString(type));
 
                     it2.remove();
                     continue;
                 }
 
                 if (StringUtils.isBlank(type.getBinding()) && StringUtils.isBlank(type.getConverter())) {
-                    StringWriter writer = new StringWriter();
-                    JAXB.marshal(type, writer);
-                    log.warn("Bad configuration for <forcedType/>. Either <binding/> or <converter/> is required: " + writer);
+                    log.warn("Bad configuration for <forcedType/>. Either <binding/> or <converter/> is required: " + toString(type));
 
                     it2.remove();
                     continue;
+                }
+            }
+            else {
+                if (!StringUtils.isBlank(type.getUserType())) {
+                    log.warn("Bad configuration for <forcedType/>. <userType/> is not allowed when <name/> is provided: " + toString(type));
+                    type.setUserType(null);
+                }
+                if (!StringUtils.isBlank(type.getBinding())) {
+                    log.warn("Bad configuration for <forcedType/>. <binding/> is not allowed when <name/> is provided: " + toString(type));
+                    type.setBinding(null);
+                }
+                if (!StringUtils.isBlank(type.getConverter())) {
+                    log.warn("Bad configuration for <forcedType/>. <converter/> is not allowed when <name/> is provided: " + toString(type));
+                    type.setConverter(null);
                 }
             }
 
@@ -803,6 +933,12 @@ public abstract class AbstractDatabase implements Database {
         }
 
         return null;
+    }
+
+    private final String toString(ForcedType type) {
+        StringWriter writer = new StringWriter();
+        JAXB.marshal(type, writer);
+        return writer.toString();
     }
 
     @Override
@@ -1028,6 +1164,16 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
+    public final TableDefinition getTable(SchemaDefinition schema, Name name) {
+        return getTable(schema, name, false);
+    }
+
+    @Override
+    public final TableDefinition getTable(SchemaDefinition schema, Name name, boolean ignoreCase) {
+        return getDefinition(getTables(schema), name, ignoreCase);
+    }
+
+    @Override
     public final List<EnumDefinition> getEnums(SchemaDefinition schema) {
         if (enums == null) {
             enums = new ArrayList<EnumDefinition>();
@@ -1130,6 +1276,16 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
+    public final EnumDefinition getEnum(SchemaDefinition schema, Name name) {
+        return getEnum(schema, name, false);
+    }
+
+    @Override
+    public final EnumDefinition getEnum(SchemaDefinition schema, Name name, boolean ignoreCase) {
+        return getDefinition(getEnums(schema), name, ignoreCase);
+    }
+
+    @Override
     public final List<DomainDefinition> getDomains(SchemaDefinition schema) {
         if (domains == null) {
             domains = new ArrayList<DomainDefinition>();
@@ -1155,6 +1311,16 @@ public abstract class AbstractDatabase implements Database {
 
     @Override
     public final DomainDefinition getDomain(SchemaDefinition schema, String name, boolean ignoreCase) {
+        return getDefinition(getDomains(schema), name, ignoreCase);
+    }
+
+    @Override
+    public final DomainDefinition getDomain(SchemaDefinition schema, Name name) {
+        return getDomain(schema, name, false);
+    }
+
+    @Override
+    public final DomainDefinition getDomain(SchemaDefinition schema, Name name, boolean ignoreCase) {
         return getDefinition(getDomains(schema), name, ignoreCase);
     }
 
@@ -1195,7 +1361,16 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public final List<UDTDefinition> getUDTs(SchemaDefinition schema) {
+    public final ArrayDefinition getArray(SchemaDefinition schema, Name name) {
+        return getArray(schema, name, false);
+    }
+
+    @Override
+    public final ArrayDefinition getArray(SchemaDefinition schema, Name name, boolean ignoreCase) {
+        return getDefinition(getArrays(schema), name, ignoreCase);
+    }
+
+    private final List<UDTDefinition> getAllUDTs(SchemaDefinition schema) {
         if (udts == null) {
             udts = new ArrayList<UDTDefinition>();
 
@@ -1220,6 +1395,21 @@ public abstract class AbstractDatabase implements Database {
         return filterSchema(udts, schema, udtsBySchema);
     }
 
+    private final List<UDTDefinition> ifInPackage(List<UDTDefinition> allUDTs, boolean expected) {
+        List<UDTDefinition> result = new ArrayList<UDTDefinition>();
+
+        for (UDTDefinition u : allUDTs)
+            if ((u.getPackage() != null) == expected)
+                result.add(u);
+
+        return result;
+    }
+
+    @Override
+    public final List<UDTDefinition> getUDTs(SchemaDefinition schema) {
+        return getAllUDTs(schema);
+    }
+
     @Override
     public final UDTDefinition getUDT(SchemaDefinition schema, String name) {
         return getUDT(schema, name, false);
@@ -1228,6 +1418,21 @@ public abstract class AbstractDatabase implements Database {
     @Override
     public final UDTDefinition getUDT(SchemaDefinition schema, String name, boolean ignoreCase) {
         return getDefinition(getUDTs(schema), name, ignoreCase);
+    }
+
+    @Override
+    public final UDTDefinition getUDT(SchemaDefinition schema, Name name) {
+        return getUDT(schema, name, false);
+    }
+
+    @Override
+    public final UDTDefinition getUDT(SchemaDefinition schema, Name name, boolean ignoreCase) {
+        return getDefinition(getUDTs(schema), name, ignoreCase);
+    }
+
+    @Override
+    public final List<UDTDefinition> getUDTs(PackageDefinition pkg) {
+        return ifInPackage(getAllUDTs(pkg.getSchema()), true);
     }
 
     @Override
@@ -1302,10 +1507,31 @@ public abstract class AbstractDatabase implements Database {
         return filterSchema(packages, schema, packagesBySchema);
     }
 
+    @Override
+    public PackageDefinition getPackage(SchemaDefinition schema, String inputName) {
+        for (PackageDefinition pkg : getPackages(schema))
+            if (pkg.getName().equals(inputName))
+                return pkg;
+
+        return null;
+    }
+
     protected static final <D extends Definition> D getDefinition(List<D> definitions, String name, boolean ignoreCase) {
         for (D definition : definitions) {
             if ((ignoreCase && definition.getName().equalsIgnoreCase(name)) ||
                 (!ignoreCase && definition.getName().equals(name))) {
+
+                return definition;
+            }
+        }
+
+        return null;
+    }
+
+    protected static final <D extends Definition> D getDefinition(List<D> definitions, Name name, boolean ignoreCase) {
+        for (D definition : definitions) {
+            if ((ignoreCase && definition.getQualifiedNamePart().equalsIgnoreCase(name)) ||
+                (!ignoreCase && definition.getQualifiedNamePart().equals(name))) {
 
                 return definition;
             }

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -189,12 +183,26 @@ public interface DSLContext extends Scope , AutoCloseable  {
     // XXX Convenience methods accessing the underlying Connection
     // -------------------------------------------------------------------------
 
+    /**
+     * Access the parser API.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Parser parser();
 
-
-
-
-
-
+    /**
+     * A JDBC connection that runs each statement through the {@link #parser()}
+     * first, prior to re-generating and running the SQL.
+     * <p>
+     * The resulting {@link Connection} wraps an underlying JDBC connection that
+     * has been obtained from {@link ConnectionProvider#acquire()} and must be
+     * released by calling {@link Connection#close()}.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Connection parsingConnection();
 
     /**
      * Access the database meta data.
@@ -272,6 +280,11 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
      * {@link Configuration#transactionProvider()}, and return the
      * <code>transactional</code>'s outcome.
+     * <p>
+     * The argument transactional code should not capture any scope but derive
+     * its {@link Configuration} from the
+     * {@link TransactionalCallable#run(Configuration)} argument in order to
+     * create new statements.
      *
      * @param transactional The transactional code
      * @return The transactional outcome
@@ -279,37 +292,56 @@ public interface DSLContext extends Scope , AutoCloseable  {
     <T> T transactionResult(TransactionalCallable<T> transactional);
 
     /**
-     * Run a {@link ThreadLocalTransactionalRunnable} in the context of this
+     * Run a {@link ContextTransactionalRunnable} in the context of this
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link ThreadLocalTransactionProvider}.
+     * {@link Configuration#transactionProvider()}, and return the
+     * <code>transactional</code>'s outcome.
+     * <p>
+     * The argument transactional code may capture scope to derive its
+     * {@link Configuration} from the "context" in order to create new
+     * statements. This context can be provided, for instance, by
+     * {@link ThreadLocalTransactionProvider} automatically.
      *
      * @param transactional The transactional code
+     * @return The transactional outcome
      * @throws ConfigurationException if the underlying
-     *             {@link Configuration#transactionProvider()} is not a
-     *             {@link ThreadLocalTransactionProvider}.
+     *             {@link Configuration#transactionProvider()} is not able to
+     *             provide context (i.e. currently, it is not a
+     *             {@link ThreadLocalTransactionProvider}).
      */
-    <T> T transactionResult(ThreadLocalTransactionalCallable<T> transactional) throws ConfigurationException;
+    <T> T transactionResult(ContextTransactionalCallable<T> transactional) throws ConfigurationException;
 
     /**
      * Run a {@link TransactionalRunnable} in the context of this
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
      * {@link Configuration#transactionProvider()}.
+     * <p>
+     * The argument transactional code should not capture any scope but derive
+     * its {@link Configuration} from the
+     * {@link TransactionalCallable#run(Configuration)} argument in order to
+     * create new statements.
      *
      * @param transactional The transactional code
      */
     void transaction(TransactionalRunnable transactional);
 
     /**
-     * Run a {@link ThreadLocalTransactionalRunnable} in the context of this
+     * Run a {@link ContextTransactionalRunnable} in the context of this
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link ThreadLocalTransactionProvider}.
+     * {@link Configuration#transactionProvider()}.
+     * <p>
+     * The argument transactional code may capture scope to derive its
+     * {@link Configuration} from the "context" in order to create new
+     * statements. This context can be provided, for instance, by
+     * {@link ThreadLocalTransactionProvider} automatically.
      *
      * @param transactional The transactional code
      * @throws ConfigurationException if the underlying
-     *             {@link Configuration#transactionProvider()} is not a
-     *             {@link ThreadLocalTransactionProvider}.
+     *             {@link Configuration#transactionProvider()} is not able to
+     *             provide context (i.e. currently, it is not a
+     *             {@link ThreadLocalTransactionProvider}).
      */
-    void transaction(ThreadLocalTransactionalRunnable transactional) throws ConfigurationException;
+    void transaction(ContextTransactionalRunnable transactional) throws ConfigurationException;
 
 
 
@@ -326,7 +358,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @param transactional The transactional code
      * @return The transactional outcome
-     * @throws ConfigurationException If this is run with a {@link ThreadLocalTransactionProvider}.
+     * @throws ConfigurationException If this is run with a
+     *             {@link ThreadLocalTransactionProvider}.
      */
     <T> CompletionStage<T> transactionResultAsync(TransactionalCallable<T> transactional) throws ConfigurationException;
 
@@ -342,7 +375,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * {@link Configuration#executorProvider()}.
      *
      * @param transactional The transactional code
-     * @throws ConfigurationException If this is run with a {@link ThreadLocalTransactionProvider}.
+     * @throws ConfigurationException If this is run with a
+     *             {@link ThreadLocalTransactionProvider}.
      */
     CompletionStage<Void> transactionAsync(TransactionalRunnable transactional) throws ConfigurationException;
 
@@ -358,7 +392,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @param transactional The transactional code
      * @return The transactional outcome
-     * @throws ConfigurationException If this is run with a {@link ThreadLocalTransactionProvider}.
+     * @throws ConfigurationException If this is run with a
+     *             {@link ThreadLocalTransactionProvider}.
      */
     <T> CompletionStage<T> transactionResultAsync(Executor executor, TransactionalCallable<T> transactional) throws ConfigurationException;
 
@@ -373,7 +408,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * {@link Executor}.
      *
      * @param transactional The transactional code
-     * @throws ConfigurationException If this is run with a {@link ThreadLocalTransactionProvider}.
+     * @throws ConfigurationException If this is run with a
+     *             {@link ThreadLocalTransactionProvider}.
      */
     CompletionStage<Void> transactionAsync(Executor executor, TransactionalRunnable transactional) throws ConfigurationException;
 
@@ -384,7 +420,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
      * {@link Configuration#connectionProvider()}.
      *
-     * @param runnable The code running statements against the
+     * @param callable The code running statements against the
      *            <code>connection</code>.
      * @return The outcome of the callable
      */
@@ -4407,7 +4443,13 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
-     * <code>SELECT *</code> semantics.
+     * <code>SELECT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
      * @see DSL#select(Collection)
      */
@@ -4421,7 +4463,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * statement from this {@link DSLContext}. If you don't need to render or
      * execute this <code>SELECT</code> statement (e.g. because you want to
      * create a subselect), consider using the static
-     * {@link DSL#select(Field...)} instead.
+     * {@link DSL#select(SelectField...)} instead.
      * <p>
      * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
@@ -4434,10 +4476,16 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *       .execute();
      * </pre></code>
      * <p>
-     * Note that passing an empty array (e.g. by not passing any vararg
-     * argument) conveniently produces <code>SELECT *</code> semantics.
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
-     * @see DSL#select(Field...)
+     * @see DSL#select(SelectField...)
      */
     @Support
     SelectSelectStep<Record> select(SelectField<?>... fields);
@@ -4447,7 +4495,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Field#in(Select)}, {@link Field#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4477,7 +4525,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row2#in(Select)}, {@link Row2#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4507,7 +4555,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row3#in(Select)}, {@link Row3#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4537,7 +4585,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row4#in(Select)}, {@link Row4#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4567,7 +4615,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row5#in(Select)}, {@link Row5#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4597,7 +4645,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row6#in(Select)}, {@link Row6#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4627,7 +4675,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row7#in(Select)}, {@link Row7#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4657,7 +4705,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row8#in(Select)}, {@link Row8#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4687,7 +4735,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row9#in(Select)}, {@link Row9#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4717,7 +4765,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row10#in(Select)}, {@link Row10#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4747,7 +4795,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row11#in(Select)}, {@link Row11#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4777,7 +4825,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row12#in(Select)}, {@link Row12#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4807,7 +4855,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row13#in(Select)}, {@link Row13#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4837,7 +4885,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row14#in(Select)}, {@link Row14#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4867,7 +4915,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row15#in(Select)}, {@link Row15#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4897,7 +4945,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row16#in(Select)}, {@link Row16#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4927,7 +4975,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row17#in(Select)}, {@link Row17#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4957,7 +5005,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row18#in(Select)}, {@link Row18#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -4987,7 +5035,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row19#in(Select)}, {@link Row19#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5017,7 +5065,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row20#in(Select)}, {@link Row20#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5047,7 +5095,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row21#in(Select)}, {@link Row21#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5077,7 +5125,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it
+     * This is the same as {@link #select(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row22#in(Select)}, {@link Row22#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5126,7 +5174,13 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
-     * <code>SELECT DISTINCT *</code> semantics.
+     * <code>SELECT DISTINCT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
      * @see DSL#selectDistinct(Collection)
      */
@@ -5140,7 +5194,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * statement from this {@link DSLContext}. If you don't need to render or
      * execute this <code>SELECT</code> statement (e.g. because you want to
      * create a subselect), consider using the static
-     * {@link DSL#selectDistinct(Field...)} instead.
+     * {@link DSL#selectDistinct(SelectField...)} instead.
      * <p>
      * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
@@ -5152,10 +5206,16 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *       .orderBy(field2);
      * </pre></code>
      * <p>
-     * Note that passing an empty array (e.g. by not passing any vararg
-     * argument) conveniently produces <code>SELECT DISTINCT *</code> semantics.
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT DISTINCT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
-     * @see DSL#selectDistinct(Field...)
+     * @see DSL#selectDistinct(SelectField...)
      */
     @Support
     SelectSelectStep<Record> selectDistinct(SelectField<?>... fields);
@@ -5165,7 +5225,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Field#in(Select)}, {@link Field#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5195,7 +5255,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row2#in(Select)}, {@link Row2#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5225,7 +5285,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row3#in(Select)}, {@link Row3#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5255,7 +5315,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row4#in(Select)}, {@link Row4#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5285,7 +5345,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row5#in(Select)}, {@link Row5#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5315,7 +5375,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row6#in(Select)}, {@link Row6#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5345,7 +5405,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row7#in(Select)}, {@link Row7#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5375,7 +5435,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row8#in(Select)}, {@link Row8#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5405,7 +5465,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row9#in(Select)}, {@link Row9#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5435,7 +5495,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row10#in(Select)}, {@link Row10#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5465,7 +5525,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row11#in(Select)}, {@link Row11#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5495,7 +5555,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row12#in(Select)}, {@link Row12#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5525,7 +5585,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row13#in(Select)}, {@link Row13#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5555,7 +5615,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row14#in(Select)}, {@link Row14#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5585,7 +5645,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row15#in(Select)}, {@link Row15#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5615,7 +5675,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row16#in(Select)}, {@link Row16#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5645,7 +5705,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row17#in(Select)}, {@link Row17#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5675,7 +5735,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row18#in(Select)}, {@link Row18#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5705,7 +5765,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row19#in(Select)}, {@link Row19#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5735,7 +5795,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row20#in(Select)}, {@link Row20#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5765,7 +5825,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row21#in(Select)}, {@link Row21#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5795,7 +5855,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
     /**
      * Create a new DSL select statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row22#in(Select)}, {@link Row22#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -6950,7 +7010,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>INSERT</code> and
-     * <code>UPDATE</code> queries in batch mode (with bind values).
+     * <code>UPDATE</code> queries in batch mode (with bind values) according to
+     * {@link UpdatableRecord#store()} semantics.
      * <p>
      * This batch operation can be executed in two modes:
      * <p>
@@ -6987,6 +7048,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * the order of records is preserved entirely, and jOOQ can guarantee that
      * only a single batch statement is serialised to the database.
      *
+     * @see UpdatableRecord#store()
      * @see Statement#executeBatch()
      */
     @Support
@@ -6994,9 +7056,11 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>INSERT</code> and
-     * <code>UPDATE</code> queries in batch mode (with bind values).
+     * <code>UPDATE</code> queries in batch mode (with bind values) according to
+     * {@link UpdatableRecord#store()} semantics.
      *
      * @see #batchStore(UpdatableRecord...)
+     * @see UpdatableRecord#store()
      * @see Statement#executeBatch()
      */
     @Support
@@ -7004,9 +7068,11 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>INSERT</code> queries
-     * in batch mode (with bind values).
+     * in batch mode (with bind values) according to
+     * {@link TableRecord#insert()} semantics.
      *
      * @see #batchStore(UpdatableRecord...)
+     * @see TableRecord#insert()
      * @see Statement#executeBatch()
      */
     @Support
@@ -7014,7 +7080,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>INSERT</code> queries
-     * in batch mode (with bind values).
+     * in batch mode (with bind values) according to
+     * {@link TableRecord#insert()} semantics.
      *
      * @see #batchStore(UpdatableRecord...)
      * @see Statement#executeBatch()
@@ -7024,9 +7091,11 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>UPDATE</code> queries
-     * in batch mode (with bind values).
+     * in batch mode (with bind values) according to
+     * {@link UpdatableRecord#update()} semantics.
      *
      * @see #batchStore(UpdatableRecord...)
+     * @see UpdatableRecord#update()
      * @see Statement#executeBatch()
      */
     @Support
@@ -7034,9 +7103,11 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>UPDATE</code> queries
-     * in batch mode (with bind values).
+     * in batch mode (with bind values) according to
+     * {@link UpdatableRecord#update()} semantics.
      *
      * @see #batchStore(UpdatableRecord...)
+     * @see UpdatableRecord#update()
      * @see Statement#executeBatch()
      */
     @Support
@@ -7044,7 +7115,8 @@ public interface DSLContext extends Scope , AutoCloseable  {
 
     /**
      * Create a batch statement to execute a set of <code>DELETE</code> queries
-     * in batch mode (with bind values).
+     * in batch mode (with bind values) according to
+     * {@link UpdatableRecord#delete()} sematics.
      * <p>
      * This batch operation can be executed in two modes:
      * <p>
@@ -7081,16 +7153,19 @@ public interface DSLContext extends Scope , AutoCloseable  {
      * the order of records is preserved entirely, and jOOQ can guarantee that
      * only a single batch statement is serialised to the database.
      *
+     * @see UpdatableRecord#delete()
      * @see Statement#executeBatch()
      */
     @Support
     Batch batchDelete(UpdatableRecord<?>... records);
 
     /**
-     * Create a batch statement to execute a set of <code>DELETE</code> in batch
-     * mode (with bind values).
+     * Create a batch statement to execute a set of <code>DELETE</code> queries
+     * in batch mode (with bind values) according to
+     * {@link UpdatableRecord#delete()} sematics.
      *
      * @see #batchDelete(UpdatableRecord...)
+     * @see UpdatableRecord#delete()
      * @see Statement#executeBatch()
      */
     @Support
@@ -7189,7 +7264,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createSchema(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     CreateSchemaFinalStep createSchema(String schema);
 
     /**
@@ -7197,7 +7272,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createSchema(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     CreateSchemaFinalStep createSchema(Name schema);
 
     /**
@@ -7205,7 +7280,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createSchema(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     CreateSchemaFinalStep createSchema(Schema schema);
 
     /**
@@ -7213,7 +7288,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createSchemaIfNotExists(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     CreateSchemaFinalStep createSchemaIfNotExists(String schema);
 
     /**
@@ -7221,7 +7296,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createSchemaIfNotExists(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     CreateSchemaFinalStep createSchemaIfNotExists(Name schema);
 
     /**
@@ -7229,7 +7304,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createSchemaIfNotExists(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     CreateSchemaFinalStep createSchemaIfNotExists(Schema schema);
 
     /**
@@ -7545,7 +7620,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createIndexIfNotExists(String)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     CreateIndexStep createIndexIfNotExists(String index);
 
     /**
@@ -7553,7 +7628,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createIndexIfNotExists(Name)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     CreateIndexStep createIndexIfNotExists(Name index);
 
     /**
@@ -7577,7 +7652,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createIndex(String)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     CreateIndexStep createUniqueIndexIfNotExists(String index);
 
     /**
@@ -7585,7 +7660,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#createIndex(Name)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     CreateIndexStep createUniqueIndexIfNotExists(Name index);
 
     /**
@@ -7713,7 +7788,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterTableIfExists(String)
      */
-    @Support
+    @Support({ H2, POSTGRES })
     AlterTableStep alterTableIfExists(String table);
 
     /**
@@ -7721,7 +7796,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterTableIfExists(Name)
      */
-    @Support
+    @Support({ H2, POSTGRES })
     AlterTableStep alterTableIfExists(Name table);
 
     /**
@@ -7729,7 +7804,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterTableIfExists(Table)
      */
-    @Support
+    @Support({ H2, POSTGRES })
     AlterTableStep alterTableIfExists(Table<?> table);
 
     /**
@@ -7737,7 +7812,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterSchema(String)
      */
-    @Support({ POSTGRES })
+    @Support({ HSQLDB, POSTGRES })
     AlterSchemaStep alterSchema(String schema);
 
     /**
@@ -7745,7 +7820,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterSchema(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ HSQLDB, POSTGRES })
     AlterSchemaStep alterSchema(Name schema);
 
     /**
@@ -7753,7 +7828,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterSchema(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ HSQLDB, POSTGRES })
     AlterSchemaStep alterSchema(Schema schema);
 
     /**
@@ -7785,7 +7860,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterView(String)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     AlterViewStep alterView(String view);
 
     /**
@@ -7793,7 +7868,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterView(Name)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     AlterViewStep alterView(Name view);
 
     /**
@@ -7801,7 +7876,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterView(Table)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     AlterViewStep alterView(Table<?> view);
 
     /**
@@ -7809,7 +7884,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterViewIfExists(String)
      */
-    @Support
+    @Support({ POSTGRES })
     AlterViewStep alterViewIfExists(String view);
 
     /**
@@ -7817,7 +7892,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterViewIfExists(Name)
      */
-    @Support
+    @Support({ POSTGRES })
     AlterViewStep alterViewIfExists(Name view);
 
     /**
@@ -7825,7 +7900,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterViewIfExists(Table)
      */
-    @Support
+    @Support({ POSTGRES })
     AlterViewStep alterViewIfExists(Table<?> view);
 
     /**
@@ -7833,7 +7908,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterIndex(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterIndexStep alterIndex(String index);
 
     /**
@@ -7841,7 +7916,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterIndex(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterIndexStep alterIndex(Name index);
 
     /**
@@ -7849,7 +7924,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterIndexIfExists(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     AlterIndexStep alterIndexIfExists(String index);
 
     /**
@@ -7857,7 +7932,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#alterIndexIfExists(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     AlterIndexStep alterIndexIfExists(Name index);
 
     /**
@@ -7865,7 +7940,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#dropSchema(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     DropSchemaStep dropSchema(String schema);
 
     /**
@@ -7873,7 +7948,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#dropSchema(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     DropSchemaStep dropSchema(Name schema);
 
     /**
@@ -7881,7 +7956,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#dropSchema(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     DropSchemaStep dropSchema(Schema schema);
 
     /**
@@ -7889,7 +7964,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#dropSchemaIfExists(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     DropSchemaStep dropSchemaIfExists(String schema);
 
     /**
@@ -7897,7 +7972,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#dropSchemaIfExists(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     DropSchemaStep dropSchemaIfExists(Name schema);
 
     /**
@@ -7905,7 +7980,7 @@ public interface DSLContext extends Scope , AutoCloseable  {
      *
      * @see DSL#dropSchemaIfExists(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     DropSchemaStep dropSchemaIfExists(Schema schema);
 
     /**

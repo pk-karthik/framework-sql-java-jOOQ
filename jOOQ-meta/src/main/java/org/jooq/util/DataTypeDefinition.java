@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,12 +31,10 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util;
 
+import org.jooq.Name;
 
 /**
  * A definition for a data type object.
@@ -84,6 +79,11 @@ public interface DataTypeDefinition {
      * The user type, if applicable.
      */
     String getUserType();
+
+    /**
+     * The qualified user type, if applicable.
+     */
+    Name getQualifiedUserType();
 
     /**
      * The custom Java type to represent this data type, if applicable.

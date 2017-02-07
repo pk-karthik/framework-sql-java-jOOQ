@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
 
@@ -45,6 +39,7 @@ import static org.jooq.Clause.CATALOG_REFERENCE;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.jooq.Catalog;
 import org.jooq.Clause;
@@ -114,6 +109,13 @@ public class CatalogImpl extends AbstractQueryPart implements Catalog {
     public List<Schema> getSchemas() {
         return Collections.emptyList();
     }
+
+
+    @Override
+    public final Stream<Schema> schemaStream() {
+        return getSchemas().stream();
+    }
+
 
     // ------------------------------------------------------------------------
     // XXX: Object API

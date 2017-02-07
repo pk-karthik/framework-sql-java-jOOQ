@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,12 +31,10 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
+import java.util.stream.Stream;
 
 /**
  * A model type for a row value expression.
@@ -56,6 +51,13 @@ public interface Row extends FieldOrRow {
      * Get the degree of this row value expression.
      */
     int size();
+
+
+    /**
+     * Get the fields from this row as a {@link Stream}.
+     */
+    Stream<Field<?>> fieldStream();
+
 
     /**
      * Get a specific field from this row.

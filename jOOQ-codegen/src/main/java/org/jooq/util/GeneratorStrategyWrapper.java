@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,13 +31,11 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util;
 
 import static org.jooq.util.GenerationUtil.convertToIdentifier;
+import static org.jooq.util.GenerationUtil.escapeWindowsForbiddenNames;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -113,21 +108,18 @@ class GeneratorStrategyWrapper extends AbstractGeneratorStrategy {
     }
 
     @Override
+    public String getFileHeader(Definition definition, Mode mode) {
+        return delegate.getFileHeader(definition, mode);
+    }
+
+    @Override
     public String getJavaIdentifier(Definition definition) {
+        String identifier = getFixedJavaIdentifier(definition);
 
-        // [#1473] Identity identifiers should not be renamed by custom strategies
-        if (definition instanceof IdentityDefinition)
-            return "IDENTITY_" + getJavaIdentifier(((IdentityDefinition) definition).getColumn().getContainer());
+        if (identifier != null)
+            return identifier;
 
-        // [#2032] Intercept default Catalog
-        else if (definition instanceof CatalogDefinition && ((CatalogDefinition) definition).isDefaultCatalog())
-            return "DEFAULT_CATALOG";
-
-        // [#2089] Intercept default schema
-        else if (definition instanceof SchemaDefinition && ((SchemaDefinition) definition).isDefaultSchema())
-            return "DEFAULT_SCHEMA";
-
-        String identifier = convertToIdentifier(delegate.getJavaIdentifier(definition), language);
+        identifier = convertToIdentifier(delegate.getJavaIdentifier(definition), language);
 
         // [#1212] Don't trust custom strategies and disambiguate identifiers here
         if (definition instanceof ColumnDefinition ||
@@ -147,6 +139,14 @@ class GeneratorStrategyWrapper extends AbstractGeneratorStrategy {
             SchemaDefinition schema = definition.getSchema();
 
             if (identifier.equals(getJavaIdentifier(schema)))
+                return identifier + "_";
+        }
+
+        // [#5557] Once more, this causes issues...
+        else if (definition instanceof SchemaDefinition) {
+            CatalogDefinition catalog = definition.getCatalog();
+
+            if (identifier.equals(getJavaIdentifier(catalog)))
                 return identifier + "_";
         }
 
@@ -293,27 +293,20 @@ class GeneratorStrategyWrapper extends AbstractGeneratorStrategy {
 
     @Override
     public String getJavaClassName(Definition definition, Mode mode) {
+        String name = getFixedJavaClassName(definition);
+        if (name != null)
+            return name;
 
         // [#1150] Intercept Mode.RECORD calls for tables
-        if (definition instanceof TableDefinition && !generator.generateRecords() && mode == Mode.RECORD) {
+        if (definition instanceof TableDefinition && !generator.generateRecords() && mode == Mode.RECORD)
             return Record.class.getSimpleName();
-        }
-
-        // [#2032] Intercept default catalog
-        else if (definition instanceof CatalogDefinition && ((CatalogDefinition) definition).isDefaultCatalog()) {
-            return "DefaultCatalog";
-        }
-
-        // [#2089] Intercept default schema
-        else if (definition instanceof SchemaDefinition && ((SchemaDefinition) definition).isDefaultSchema()) {
-            return "DefaultSchema";
-        }
 
         String className;
 
         className = delegate.getJavaClassName(definition, mode);
         className = overload(definition, mode, className);
         className = convertToIdentifier(className, language);
+        className = escapeWindowsForbiddenNames(className);
 
         return className;
     }
@@ -330,9 +323,13 @@ class GeneratorStrategyWrapper extends AbstractGeneratorStrategy {
 
         for (int i = 0; i < split.length; i++) {
             split[i] = convertToIdentifier(split[i], language);
+            split[i] = escapeWindowsForbiddenNames(split[i]);
         }
 
-        return StringUtils.join(split, ".");
+        return StringUtils
+            .join(split, ".")
+            // [#4168] In JDK 9, _ is no longer allowed as an identifier
+            .replaceAll("\\._?\\.", ".");
     }
 
     @Override

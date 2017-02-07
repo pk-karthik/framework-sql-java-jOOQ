@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -717,7 +711,7 @@ public class DefaultConfiguration implements Configuration {
     public final Configuration set(ConnectionProvider newConnectionProvider) {
         if (newConnectionProvider != null) {
 
-            // TODO Factor out this API in a more formal contract between TransactionProvider and ConnectionProvider
+            // [#5388] TODO Factor out this API in a more formal contract between TransactionProvider and ConnectionProvider
             if (transactionProvider instanceof ThreadLocalTransactionProvider &&
               !(newConnectionProvider instanceof ThreadLocalConnectionProvider))
                 throw new ConfigurationException("Cannot specify custom ConnectionProvider when Configuration contains a ThreadLocalTransactionProvider");

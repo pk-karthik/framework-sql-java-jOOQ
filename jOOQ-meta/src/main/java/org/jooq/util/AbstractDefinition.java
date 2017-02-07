@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,16 +31,18 @@
  *
  *
  *
- *
- *
- *
  */
 
 package org.jooq.util;
 
+import static org.jooq.impl.DSL.name;
+
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jooq.DSLContext;
+import org.jooq.Name;
 import org.jooq.SQLDialect;
 
 /**
@@ -62,6 +61,8 @@ public abstract class AbstractDefinition implements Definition {
     // [#2238] Some caches for strings that are heavy to calculate in large schemas
     private transient String       qualifiedInputName;
     private transient String       qualifiedOutputName;
+    private transient Name         qualifiedInputNamePart;
+    private transient Name         qualifiedOutputNamePart;
     private transient Integer      hashCode;
 
     public AbstractDefinition(Database database, SchemaDefinition schema, String name) {
@@ -129,11 +130,6 @@ public abstract class AbstractDefinition implements Definition {
         return getQualifiedInputName();
     }
 
-    /**
-     * Subclasses may override this method
-     *
-     * {@inheritDoc}
-     */
     @Override
     public final String getQualifiedInputName() {
         if (qualifiedInputName == null) {
@@ -158,11 +154,6 @@ public abstract class AbstractDefinition implements Definition {
         return qualifiedInputName;
     }
 
-    /**
-     * Subclasses may override this method
-     *
-     * {@inheritDoc}
-     */
     @Override
     public final String getQualifiedOutputName() {
         if (qualifiedOutputName == null) {
@@ -185,6 +176,51 @@ public abstract class AbstractDefinition implements Definition {
         }
 
         return qualifiedOutputName;
+    }
+
+    @Override
+    public final Name getQualifiedNamePart() {
+        return getQualifiedInputNamePart();
+    }
+
+    @Override
+    public final Name getQualifiedInputNamePart() {
+        if (qualifiedInputNamePart == null) {
+            List<String> list = new ArrayList<String>();
+
+            for (Definition part : getDefinitionPath()) {
+                if (part instanceof CatalogDefinition && ((CatalogDefinition) part).isDefaultCatalog())
+                    continue;
+                else if (part instanceof SchemaDefinition && ((SchemaDefinition) part).isDefaultSchema())
+                    continue;
+
+                list.add(part.getInputName());
+            }
+
+            qualifiedInputNamePart = name(list);
+        }
+
+        return qualifiedInputNamePart;
+    }
+
+    @Override
+    public final Name getQualifiedOutputNamePart() {
+        if (qualifiedOutputNamePart == null) {
+            List<String> list = new ArrayList<String>();
+
+            for (Definition part : getDefinitionPath()) {
+                if (part instanceof CatalogDefinition && ((CatalogDefinition) part).isDefaultCatalog())
+                    continue;
+                else if (part instanceof SchemaDefinition && ((SchemaDefinition) part).isDefaultSchema())
+                    continue;
+
+                list.add(part.getOutputName());
+            }
+
+            qualifiedOutputNamePart = name(list);
+        }
+
+        return qualifiedOutputNamePart;
     }
 
     @Override

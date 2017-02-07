@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,14 +31,12 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * An object that can behave like a table (a table-like object)
@@ -55,6 +50,13 @@ public interface TableLike<R extends Record> extends QueryPart {
      * Get this table's fields as a {@link Row}.
      */
     Row fieldsRow();
+
+
+    /**
+     * Get this table's fields as a {@link Stream}.
+     */
+    Stream<Field<?>> fieldStream();
+
 
     /**
      * Get a specific field from this table.

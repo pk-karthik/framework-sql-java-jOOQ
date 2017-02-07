@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -187,6 +181,13 @@ abstract class AbstractTable<R extends Record> extends AbstractQueryPart impleme
     public final Row fieldsRow() {
         return new RowImpl(fields0());
     }
+
+
+    @Override
+    public final Stream<Field<?>> fieldStream() {
+        return Stream.of(fields());
+    }
+
 
     @Override
     public final <T> Field<T> field(Field<T> field) {
@@ -354,7 +355,7 @@ abstract class AbstractTable<R extends Record> extends AbstractQueryPart impleme
      * Subclasses may override this method
      */
     @Override
-    public TableField<R, ? extends Number> getRecordVersion() {
+    public TableField<R, ?> getRecordVersion() {
         return null;
     }
 
@@ -364,7 +365,7 @@ abstract class AbstractTable<R extends Record> extends AbstractQueryPart impleme
      * Subclasses may override this method
      */
     @Override
-    public TableField<R, ? extends java.util.Date> getRecordTimestamp() {
+    public TableField<R, ?> getRecordTimestamp() {
         return null;
     }
 

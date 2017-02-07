@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,13 +31,10 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
-
+import java.util.stream.Stream;
 
 /**
  * UDT definition
@@ -51,9 +45,16 @@ package org.jooq;
 public interface UDT<R extends UDTRecord<R>> extends QueryPart {
 
     /**
-     * Get this UDT's fields as a {@link Row}
+     * Get this UDT's fields as a {@link Row}.
      */
     Row fieldsRow();
+
+
+    /**
+     * Get this table's fields as a {@link Stream}.
+     */
+    Stream<Field<?>> fieldStream();
+
 
     /**
      * Get a specific field from this UDT.
@@ -131,17 +132,22 @@ public interface UDT<R extends UDTRecord<R>> extends QueryPart {
     Catalog getCatalog();
 
     /**
-     * Get the UDT schema
+     * Get the UDT schema.
      */
     Schema getSchema();
 
     /**
-     * The name of this UDT
+     * Get the UDT package.
+     */
+    Package getPackage();
+
+    /**
+     * The name of this UDT.
      */
     String getName();
 
     /**
-     * @return The record type produced by this table
+     * @return The record type produced by this table.
      */
     Class<R> getRecordType();
 
@@ -153,7 +159,12 @@ public interface UDT<R extends UDTRecord<R>> extends QueryPart {
     R newRecord();
 
     /**
-     * The UDT's data type as known to the database
+     * The UDT's data type as known to the database.
      */
     DataType<R> getDataType();
+
+    /**
+     * Whether this data type can be used from SQL statements.
+     */
+    boolean isSQLUsable();
 }

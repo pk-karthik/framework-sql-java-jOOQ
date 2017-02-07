@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -306,7 +300,7 @@ class Function<T> extends AbstractField<T> implements
     final void toSQLGroupConcat(Context<?> ctx) {
         toSQLFunctionName(ctx);
         ctx.sql('(');
-        toSQLArguments0(ctx);
+        toSQLArguments1(ctx, new QueryPartList<QueryPart>(arguments.get(0)));
 
         if (!withinGroupOrderBy.isEmpty())
             ctx.sql(' ').keyword("order by").sql(' ')
@@ -424,11 +418,15 @@ class Function<T> extends AbstractField<T> implements
     }
 
     final void toSQLArguments0(Context<?> ctx) {
+        toSQLArguments1(ctx, arguments);
+    }
+
+    final void toSQLArguments1(Context<?> ctx, QueryPartList<QueryPart> args) {
         if (distinct) {
             ctx.keyword("distinct");
 
             // [#2883] PostgreSQL can use the DISTINCT keyword with formal row value expressions.
-            if (ctx.family() == POSTGRES && arguments.size() > 1) {
+            if (ctx.family() == POSTGRES && args.size() > 1) {
                 ctx.sql('(');
             }
             else {
@@ -436,14 +434,14 @@ class Function<T> extends AbstractField<T> implements
             }
         }
 
-        if (!arguments.isEmpty()) {
+        if (!args.isEmpty()) {
             if (filter == null || HSQLDB == ctx.family() || POSTGRES_9_4.precedes(ctx.dialect())) {
-                ctx.visit(arguments);
+                ctx.visit(args);
             }
             else {
                 QueryPartList<Field<?>> expressions = new QueryPartList<Field<?>>();
 
-                for (QueryPart argument : arguments)
+                for (QueryPart argument : args)
                     expressions.add(DSL.when(filter, argument == ASTERISK ? one() : argument));
 
                 ctx.visit(expressions);
@@ -451,7 +449,7 @@ class Function<T> extends AbstractField<T> implements
         }
 
         if (distinct)
-            if (ctx.family() == POSTGRES && arguments.size() > 1)
+            if (ctx.family() == POSTGRES && args.size() > 1)
                 ctx.sql(')');
 
         if (ignoreNulls) {
@@ -735,61 +733,61 @@ class Function<T> extends AbstractField<T> implements
 
     @Override
     public final WindowFinalStep<T> rangeUnboundedPreceding() {
-        windowSpecification.rowsUnboundedPreceding();
+        windowSpecification.rangeUnboundedPreceding();
         return this;
     }
 
     @Override
     public final WindowFinalStep<T> rangePreceding(int number) {
-        windowSpecification.rowsPreceding(number);
+        windowSpecification.rangePreceding(number);
         return this;
     }
 
     @Override
     public final WindowFinalStep<T> rangeCurrentRow() {
-        windowSpecification.rowsCurrentRow();
+        windowSpecification.rangeCurrentRow();
         return this;
     }
 
     @Override
     public final WindowFinalStep<T> rangeUnboundedFollowing() {
-        windowSpecification.rowsUnboundedFollowing();
+        windowSpecification.rangeUnboundedFollowing();
         return this;
     }
 
     @Override
     public final WindowFinalStep<T> rangeFollowing(int number) {
-        windowSpecification.rowsFollowing(number);
+        windowSpecification.rangeFollowing(number);
         return this;
     }
 
     @Override
     public final WindowRowsAndStep<T> rangeBetweenUnboundedPreceding() {
-        windowSpecification.rowsBetweenUnboundedPreceding();
+        windowSpecification.rangeBetweenUnboundedPreceding();
         return this;
     }
 
     @Override
     public final WindowRowsAndStep<T> rangeBetweenPreceding(int number) {
-        windowSpecification.rowsBetweenPreceding(number);
+        windowSpecification.rangeBetweenPreceding(number);
         return this;
     }
 
     @Override
     public final WindowRowsAndStep<T> rangeBetweenCurrentRow() {
-        windowSpecification.rowsBetweenCurrentRow();
+        windowSpecification.rangeBetweenCurrentRow();
         return this;
     }
 
     @Override
     public final WindowRowsAndStep<T> rangeBetweenUnboundedFollowing() {
-        windowSpecification.rowsBetweenUnboundedFollowing();
+        windowSpecification.rangeBetweenUnboundedFollowing();
         return this;
     }
 
     @Override
     public final WindowRowsAndStep<T> rangeBetweenFollowing(int number) {
-        windowSpecification.rowsBetweenFollowing(number);
+        windowSpecification.rangeBetweenFollowing(number);
         return this;
     }
 

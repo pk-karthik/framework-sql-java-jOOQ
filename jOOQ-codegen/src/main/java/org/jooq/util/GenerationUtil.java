@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,20 +31,19 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
+import static org.jooq.impl.DSL.name;
 import static org.jooq.util.AbstractGenerator.Language.JAVA;
 import static org.jooq.util.AbstractGenerator.Language.SCALA;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import org.jooq.Name;
 import org.jooq.SQLDialect;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.util.AbstractGenerator.Language;
@@ -191,6 +187,32 @@ class GenerationUtil {
         ','
     )));
 
+    private static Set<String> WINDOWS_FORBIDDEN = unmodifiableSet(new HashSet<String>(asList(
+        "CON",
+        "PRN",
+        "AUX",
+        "CLOCK$",
+        "NUL",
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4",
+        "COM5",
+        "COM6",
+        "COM7",
+        "COM8",
+        "COM9",
+        "LPT1",
+        "LPT2",
+        "LPT3",
+        "LPT4",
+        "LPT5",
+        "LPT6",
+        "LPT7",
+        "LPT8",
+        "LPT9"
+    )));
+
     /**
      * Take a character and determine if it's a valid "Scala Letter"
      * http://www.scala-lang.org/files/archive/spec/2.11/01-lexical-syntax.html
@@ -233,10 +255,23 @@ class GenerationUtil {
      * Letters, which include lower case letters (Ll), upper case letters (Lu), titlecase letters (Lt), other letters (Lo), letter numerals (Nl) and the two characters \u0024 ‘$’ and \u005F ‘_’, which both count as upper case letters.
      *
      * Character.isLetter handles the Ll, Lu, Lt, Lo, and Nl, supplement with _ and $
-     *
      */
     private static Boolean isScalaIdentifierPart(char c) {
         return isScalaIdentifierStart(c) || Character.isDigit(c);
+    }
+
+    /**
+     * Take a name and escape it if it is a Windows forbidden name like
+     * <code>CON</code> or <code>AUX</code>.
+     *
+     * @see <a href="https://github.com/jOOQ/jOOQ/issues/5596">#5596</a>
+     */
+    public static String escapeWindowsForbiddenNames(String name) {
+        return name == null
+             ? null
+             : WINDOWS_FORBIDDEN.contains(name.toUpperCase())
+             ? name + "_"
+             : name;
     }
 
     /**
@@ -316,7 +351,7 @@ class GenerationUtil {
     /**
      * Gets the base type for an array type, depending on the RDBMS dialect
      */
-    static String getArrayBaseType(SQLDialect dialect, String t, String u) {
+    static Name getArrayBaseType(SQLDialect dialect, String t, Name u) {
 
         // [#4388] TODO: Improve array handling
         switch (dialect.family()) {
@@ -326,8 +361,10 @@ class GenerationUtil {
             case POSTGRES: {
 
                 // The convention is to prepend a "_" to a type to get an array type
-                if (u != null && u.startsWith("_")) {
-                    return u.substring(1);
+                if (u != null && u.last().startsWith("_")) {
+                    String[] name = u.getName();
+                    name[name.length - 1] = name[name.length - 1].substring(1);
+                    return name(name);
                 }
 
                 // But there are also arrays with a "vector" suffix
@@ -337,7 +374,7 @@ class GenerationUtil {
             }
 
             case H2: {
-                return H2DataType.OTHER.getTypeName();
+                return name(H2DataType.OTHER.getTypeName());
             }
 
 
@@ -348,12 +385,12 @@ class GenerationUtil {
                 // In HSQLDB 2.2.5, there has been an incompatible INFORMATION_SCHEMA change around the
                 // ELEMENT_TYPES view. Arrays are now described much more explicitly
                 if ("ARRAY".equalsIgnoreCase(t)) {
-                    return "OTHER";
+                    return name("OTHER");
                 }
 
                 // This is for backwards compatibility
                 else {
-                    return t.replace(" ARRAY", "");
+                    return name(t.replace(" ARRAY", ""));
                 }
             }
         }

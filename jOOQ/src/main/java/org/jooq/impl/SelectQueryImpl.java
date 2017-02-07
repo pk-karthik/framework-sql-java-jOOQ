@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -97,6 +91,7 @@ import static org.jooq.impl.DSL.one;
 import static org.jooq.impl.DSL.orderBy;
 import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.Tools.fieldArray;
+import static org.jooq.impl.Tools.hasAmbiguousNames;
 import static org.jooq.impl.Tools.DataKey.DATA_COLLECTED_SEMI_ANTI_JOIN;
 import static org.jooq.impl.Tools.DataKey.DATA_COLLECT_SEMI_ANTI_JOIN;
 import static org.jooq.impl.Tools.DataKey.DATA_INSERT_SELECT_WITHOUT_INSERT_COLUMN_LIST;
@@ -119,6 +114,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.jooq.Clause;
 import org.jooq.Condition;
@@ -280,6 +276,13 @@ final class SelectQueryImpl<R extends Record> extends AbstractResultQuery<R> imp
         return asTable().fieldsRow();
     }
 
+
+    @Override
+    public final Stream<Field<?>> fieldStream() {
+        return Stream.of(fields());
+    }
+
+
     @Override
     public final <T> Field<T> field(Field<T> field) {
         return asTable().field(field);
@@ -422,7 +425,7 @@ final class SelectQueryImpl<R extends Record> extends AbstractResultQuery<R> imp
 
             if (into != null
                     && context.data(DATA_OMIT_INTO_CLAUSE) == null
-                    && asList(CUBRID, DERBY, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE).contains(family)) {
+                    && asList(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE).contains(family)) {
 
                 context.data(DATA_OMIT_INTO_CLAUSE, true);
                 context.visit(DSL.createTable(into).as(this));
@@ -445,6 +448,18 @@ final class SelectQueryImpl<R extends Record> extends AbstractResultQuery<R> imp
             }
 
             switch (dialect) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1367,7 +1382,7 @@ final class SelectQueryImpl<R extends Record> extends AbstractResultQuery<R> imp
         if (wrapQueryExpressionInDerivedTable)
             context.formatIndentEnd()
                    .formatNewLine()
-                   .sql(')');
+                   .sql(") x");
 
         if (context.data().containsKey(DATA_RENDER_TRAILING_LIMIT_IF_APPLICABLE) && actualLimit.isApplicable())
             context.visit(actualLimit);

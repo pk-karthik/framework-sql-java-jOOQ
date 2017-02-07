@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,14 +31,12 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util.postgres;
 
 
 import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.name;
 import static org.jooq.util.postgres.information_schema.Tables.PARAMETERS;
 import static org.jooq.util.postgres.information_schema.Tables.ROUTINES;
 import static org.jooq.util.postgres.pg_catalog.Tables.PG_PROC;
@@ -95,7 +90,10 @@ public class PostgresRoutineDefinition extends AbstractRoutineDefinition {
                 record.get(ROUTINES.NUMERIC_SCALE),
                 null,
                 (String) null,
-                record.get(ROUTINES.TYPE_UDT_NAME)
+                name(
+                    record.get(ROUTINES.TYPE_UDT_SCHEMA),
+                    record.get(ROUTINES.TYPE_UDT_NAME)
+                )
             );
 
             returnValue = new DefaultParameterDefinition(this, "RETURN_VALUE", -1, type);
@@ -119,6 +117,7 @@ public class PostgresRoutineDefinition extends AbstractRoutineDefinition {
                 PARAMETERS.CHARACTER_MAXIMUM_LENGTH,
                 PARAMETERS.NUMERIC_PRECISION,
                 PARAMETERS.NUMERIC_SCALE,
+                PARAMETERS.UDT_SCHEMA,
                 PARAMETERS.UDT_NAME,
                 PARAMETERS.ORDINAL_POSITION,
                 PARAMETERS.PARAMETER_MODE,
@@ -132,17 +131,25 @@ public class PostgresRoutineDefinition extends AbstractRoutineDefinition {
             .fetch()) {
 
             String inOut = record.get(PARAMETERS.PARAMETER_MODE);
+            SchemaDefinition typeSchema = null;
+
+            String schemaName = record.get(PARAMETERS.UDT_SCHEMA);
+            if (schemaName != null)
+                typeSchema = getDatabase().getSchema(schemaName);
 
             DataTypeDefinition type = new DefaultDataTypeDefinition(
                 getDatabase(),
-                getSchema(),
+                typeSchema,
                 record.get(PARAMETERS.DATA_TYPE),
                 record.get(PARAMETERS.CHARACTER_MAXIMUM_LENGTH),
                 record.get(PARAMETERS.NUMERIC_PRECISION),
                 record.get(PARAMETERS.NUMERIC_SCALE),
                 null,
                 record.get(PARAMETERS.PARAMETER_DEFAULT),
-                record.get(PARAMETERS.UDT_NAME)
+                name(
+                    record.get(PARAMETERS.UDT_SCHEMA),
+                    record.get(PARAMETERS.UDT_NAME)
+                )
             );
 
             ParameterDefinition parameter = new DefaultParameterDefinition(

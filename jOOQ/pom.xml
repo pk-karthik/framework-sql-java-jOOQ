@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.jooq</groupId>
         <artifactId>jooq-parent</artifactId>
-        <version>3.9.0-SNAPSHOT</version>
+        <version>3.10.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.jooq</groupId>
@@ -53,7 +53,7 @@
                             <schemaDirectory>src/main/resources/xsd</schemaDirectory>
                             <bindingDirectory>src/main/resources/xjb/runtime</bindingDirectory>
                             <schemaIncludes>
-                                <include>jooq-runtime-3.9.0.xsd</include>
+                                <include>jooq-runtime-3.10.0.xsd</include>
                             </schemaIncludes>
                             <generatePackage>org.jooq.conf</generatePackage>
                             <args>
@@ -108,7 +108,7 @@
                             <schemaDirectory>src/main/resources/xsd</schemaDirectory>
                             <bindingDirectory>src/main/resources/xjb/meta</bindingDirectory>
                             <schemaIncludes>
-                                <include>jooq-meta-3.5.4.xsd</include>
+                                <include>jooq-meta-3.10.0.xsd</include>
                             </schemaIncludes>
                             <generatePackage>org.jooq.util.xml.jaxb</generatePackage>
                             <args>

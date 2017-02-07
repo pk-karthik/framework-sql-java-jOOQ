@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,12 +31,12 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
+import static org.jooq.SQLDialect.H2;
+import static org.jooq.SQLDialect.HSQLDB;
+// ...
 import static org.jooq.SQLDialect.POSTGRES;
 
 /**
@@ -53,13 +50,13 @@ public interface AlterIndexStep {
      * Add a <code>RENAME TO</code> clause to the <code>ALTER INDEX</code>
      * statement.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterIndexFinalStep renameTo(Name newName);
 
     /**
      * Add a <code>RENAME TO</code> clause to the <code>ALTER INDEX</code>
      * statement.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterIndexFinalStep renameTo(String newName);
 }

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 
 package org.jooq.util;
@@ -46,8 +40,10 @@ import java.util.List;
 import java.util.Properties;
 
 import org.jooq.DSLContext;
+import org.jooq.Name;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
+import org.jooq.util.jaxb.Catalog;
 import org.jooq.util.jaxb.CustomType;
 import org.jooq.util.jaxb.EnumType;
 import org.jooq.util.jaxb.ForcedType;
@@ -132,6 +128,16 @@ public interface Database {
     TableDefinition getTable(SchemaDefinition schema, String name, boolean ignoreCase);
 
     /**
+     * Get a table in this database by name.
+     */
+    TableDefinition getTable(SchemaDefinition schema, Name name);
+
+    /**
+     * Get a table in this database by name.
+     */
+    TableDefinition getTable(SchemaDefinition schema, Name name, boolean ignoreCase);
+
+    /**
      * The enum UDTs defined in this database.
      */
     List<EnumDefinition> getEnums(SchemaDefinition schema);
@@ -145,6 +151,16 @@ public interface Database {
      * Get an enum UDT defined in this database by name.
      */
     EnumDefinition getEnum(SchemaDefinition schema, String name, boolean ignoreCase);
+
+    /**
+     * Get an enum UDT defined in this database by name.
+     */
+    EnumDefinition getEnum(SchemaDefinition schema, Name name);
+
+    /**
+     * Get an enum UDT defined in this database by name.
+     */
+    EnumDefinition getEnum(SchemaDefinition schema, Name name, boolean ignoreCase);
 
     /**
      * The domain UDTs defined in this database.
@@ -162,6 +178,16 @@ public interface Database {
     DomainDefinition getDomain(SchemaDefinition schema, String name, boolean ignoreCase);
 
     /**
+     * Get an domain UDT defined in this database by name.
+     */
+    DomainDefinition getDomain(SchemaDefinition schema, Name name);
+
+    /**
+     * Get an domain UDT defined in this database by name.
+     */
+    DomainDefinition getDomain(SchemaDefinition schema, Name name, boolean ignoreCase);
+
+    /**
      * The UDTs defined in this database.
      */
     List<UDTDefinition> getUDTs(SchemaDefinition schema);
@@ -175,6 +201,21 @@ public interface Database {
      * Get a UDT defined in this database by name.
      */
     UDTDefinition getUDT(SchemaDefinition schema, String name, boolean ignoreCase);
+
+    /**
+     * Get a UDT defined in this database by name.
+     */
+    UDTDefinition getUDT(SchemaDefinition schema, Name name);
+
+    /**
+     * Get a UDT defined in this database by name.
+     */
+    UDTDefinition getUDT(SchemaDefinition schema, Name name, boolean ignoreCase);
+
+    /**
+     * The UDTs defined in this database.
+     */
+    List<UDTDefinition> getUDTs(PackageDefinition pkg);
 
     /**
      * The Arrays defined in this database.
@@ -192,6 +233,16 @@ public interface Database {
     ArrayDefinition getArray(SchemaDefinition schema, String name, boolean ignoreCase);
 
     /**
+     * Get a ARRAY defined in this database by name.
+     */
+    ArrayDefinition getArray(SchemaDefinition schema, Name name);
+
+    /**
+     * Get a ARRAY defined in this database by name.
+     */
+    ArrayDefinition getArray(SchemaDefinition schema, Name name, boolean ignoreCase);
+
+    /**
      * The stored routines (procedures and functions) contained in this
      * database.
      */
@@ -201,6 +252,11 @@ public interface Database {
      * The packages contained in this database.
      */
     List<PackageDefinition> getPackages(SchemaDefinition schema);
+
+    /**
+     * Get a package defined in this database by name.
+     */
+    PackageDefinition getPackage(SchemaDefinition schema, String inputName);
 
     /**
      * Initialise a connection to this database.
@@ -213,9 +269,39 @@ public interface Database {
     Connection getConnection();
 
     /**
-     * The input schemata are the schemata that jooq-meta is reading data from.
+     * The input catalogs are the catalogs that jooq-meta is reading data from.
+     */
+    List<String> getInputCatalogs();
+
+    /**
+     * The input schemata are the schemata from all catalogs that jooq-meta is
+     * reading data from.
+     * <p>
+     * This will combine the schemata from all catalogs in a single list. If
+     * you're working with a multi-catalog environment, you may want to call
+     * {@link #getInputSchemata(String)} instead to disambiguate schema names
+     * (e.g. in SQL Server, there are multiple "dbo" schemas).
      */
     List<String> getInputSchemata();
+
+    /**
+     * The input schemata are the schemata from a given catalog that jooq-meta is reading data from.
+     */
+    List<String> getInputSchemata(CatalogDefinition catalog);
+
+    /**
+     * The input schemata are the schemata from a given catalog that jooq-meta is reading data from.
+     */
+    List<String> getInputSchemata(String catalog);
+
+    /**
+     * The output catalog is the catalog used by jooq-codegen in class names.
+     *
+     * @deprecated - 2.0.5 - This will be implemented in each
+     *             {@link Definition#getOutputName()}
+     */
+    @Deprecated
+    String getOutputCatalog(String inputCatalog);
 
     /**
      * The output schema is the schema used by jooq-codegen in class names.
@@ -225,6 +311,20 @@ public interface Database {
      */
     @Deprecated
     String getOutputSchema(String inputSchema);
+
+    /**
+     * The output schema is the schema used by jooq-codegen in class names.
+     *
+     * @deprecated - 2.0.5 - This will be implemented in each
+     *             {@link Definition#getOutputName()}
+     */
+    @Deprecated
+    String getOutputSchema(String inputCatalog, String inputSchema);
+
+    /**
+     * The input and output catalogs.
+     */
+    void setConfiguredCatalogs(List<Catalog> catalogs);
 
     /**
      * The input and output schemata.
@@ -451,18 +551,27 @@ public interface Database {
     /**
      * Database objects matching any of these field names will be generated as
      * custom types.
+     *
+     * @deprecated - 3.10.0 - [#5750] - Use {@link #getConfiguredForcedTypes()} only.
      */
+    @Deprecated
     void setConfiguredCustomTypes(List<CustomType> types);
 
     /**
      * Database objects matching any of these field names will be generated as
      * custom types.
+     *
+     * @deprecated - 3.10.0 - [#5750] - Use {@link #getConfiguredForcedTypes()} only.
      */
+    @Deprecated
     List<CustomType> getConfiguredCustomTypes();
 
     /**
      * Get a specific configured custom type by its name.
+     *
+     * @deprecated - 3.10.0 - [#5750] - Use {@link #getConfiguredForcedTypes()} only.
      */
+    @Deprecated
     CustomType getConfiguredCustomType(String name);
 
     /**

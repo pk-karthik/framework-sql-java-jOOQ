@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util.jpa;
 
@@ -45,7 +39,11 @@ import static org.jooq.tools.StringUtils.isBlank;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.persistence.Entity;
 
@@ -53,10 +51,13 @@ import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.tools.JooqLogger;
+import org.jooq.util.SchemaDefinition;
 import org.jooq.util.h2.H2Database;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -74,6 +75,7 @@ public class JPADatabase extends H2Database {
 
     private Connection              connection;
 
+    @SuppressWarnings("serial")
     @Override
     protected DSLContext create0() {
         if (connection == null) {
@@ -91,6 +93,30 @@ public class JPADatabase extends H2Database {
                     new StandardServiceRegistryBuilder()
                         .applySetting("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
                         .applySetting("javax.persistence.schema-generation-connection", connection)
+
+                        // [#5607] JPADatabase causes warnings - This prevents them
+                        .applySetting(AvailableSettings.CONNECTION_PROVIDER, new ConnectionProvider() {
+                            @SuppressWarnings("rawtypes")
+                            @Override
+                            public boolean isUnwrappableAs(Class unwrapType) {
+                                return false;
+                            }
+                            @Override
+                            public <T> T unwrap(Class<T> unwrapType) {
+                                return null;
+                            }
+                            @Override
+                            public Connection getConnection() {
+                                return connection;
+                            }
+                            @Override
+                            public void closeConnection(Connection conn) throws SQLException {}
+
+                            @Override
+                            public boolean supportsAggressiveRelease() {
+                                return true;
+                            }
+                        })
                         .build()
                 );
 
@@ -117,5 +143,19 @@ public class JPADatabase extends H2Database {
         }
 
         return DSL.using(connection);
+    }
+
+    @Override
+    protected List<SchemaDefinition> getSchemata0() throws SQLException {
+        List<SchemaDefinition> result = new ArrayList<SchemaDefinition>(super.getSchemata0());
+
+        // [#5608] The H2-specific INFORMATION_SCHEMA is undesired in the JPADatabase's output
+        //         we're explicitly omitting it here for user convenience.
+        Iterator<SchemaDefinition> it = result.iterator();
+        while (it.hasNext())
+            if ("INFORMATION_SCHEMA".equals(it.next().getName()))
+                it.remove();
+
+        return result;
     }
 }

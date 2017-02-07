@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -58,7 +52,7 @@ public final class Constants {
      * This is the same as {@link #MINOR_VERSION}, but it may include patch
      * version suffixes.
      */
-    public static final String VERSION        = "3.9.0";
+    public static final String VERSION        = "3.10.0";
 
     /**
      * The latest jOOQ full version.
@@ -66,12 +60,12 @@ public final class Constants {
      * This is the same as {@link #VERSION}, but it may include release
      * candidate and other suffixes.
      */
-    public static final String FULL_VERSION   = "3.9.0";
+    public static final String FULL_VERSION   = "3.10.0";
 
     /**
      * The current jooq-runtime XSD file name.
      */
-    public static final String XSD_RUNTIME    = "jooq-runtime-3.8.0.xsd";
+    public static final String XSD_RUNTIME    = "jooq-runtime-3.9.0.xsd";
 
     /**
      * The current jooq-runtime XML namespace

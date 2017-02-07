@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,18 +31,61 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
+/**
+ * @author Lukas Eder
+ * @deprecated - [#2303] This is experimental functionality.
+ */
+@Deprecated
+public interface Parser {
 
+    /**
+     * Parse a SQL string to a set of queries.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Queries parse(String sql);
 
+    /**
+     * Parse a SQL string to a query.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Query parseQuery(String sql);
 
+    /**
+     * Parse a SQL string to a table.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Table<?> parseTable(String sql);
 
+    /**
+     * Parse a SQL string to a field.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Field<?> parseField(String sql);
 
+    /**
+     * Parse a SQL string to a condition.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Condition parseCondition(String sql);
 
-
-
-            
+    /**
+     * Parse a SQL string to a name.
+     *
+     * @deprecated - [#2303] This is experimental functionality.
+     */
+    @Deprecated
+    Name parseName(String sql);
+}

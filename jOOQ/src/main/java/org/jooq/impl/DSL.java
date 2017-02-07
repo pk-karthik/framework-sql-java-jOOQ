@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -83,11 +77,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1802,7 +1798,13 @@ public class DSL {
      * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
-     * <code>SELECT *</code> semantics.
+     * <code>SELECT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
      * @see DSLContext#select(Collection)
      */
@@ -1835,8 +1837,14 @@ public class DSL {
      *  .orderBy(field2);
      * </pre></code>
      * <p>
-     * Note that passing an empty array (e.g. by not passing any vararg
-     * argument) conveniently produces <code>SELECT *</code> semantics.
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
      * @see DSLContext#select(SelectField...)
      */
@@ -1850,7 +1858,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Field#in(Select)}, {@link Field#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -1888,7 +1896,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row2#in(Select)}, {@link Row2#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -1926,7 +1934,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row3#in(Select)}, {@link Row3#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -1964,7 +1972,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row4#in(Select)}, {@link Row4#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2002,7 +2010,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row5#in(Select)}, {@link Row5#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2040,7 +2048,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row6#in(Select)}, {@link Row6#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2078,7 +2086,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row7#in(Select)}, {@link Row7#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2116,7 +2124,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row8#in(Select)}, {@link Row8#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2154,7 +2162,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row9#in(Select)}, {@link Row9#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2192,7 +2200,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row10#in(Select)}, {@link Row10#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2230,7 +2238,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row11#in(Select)}, {@link Row11#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2268,7 +2276,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row12#in(Select)}, {@link Row12#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2306,7 +2314,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row13#in(Select)}, {@link Row13#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2344,7 +2352,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row14#in(Select)}, {@link Row14#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2382,7 +2390,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row15#in(Select)}, {@link Row15#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2420,7 +2428,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row16#in(Select)}, {@link Row16#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2458,7 +2466,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row17#in(Select)}, {@link Row17#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2496,7 +2504,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row18#in(Select)}, {@link Row18#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2534,7 +2542,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row19#in(Select)}, {@link Row19#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2572,7 +2580,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row20#in(Select)}, {@link Row20#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2610,7 +2618,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row21#in(Select)}, {@link Row21#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2648,7 +2656,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #select(Field...)}, except that it declares
+     * This is the same as {@link #select(SelectField...)}, except that it declares
      * additional record-level typesafety, which is needed by
      * {@link Row22#in(Select)}, {@link Row22#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2710,7 +2718,13 @@ public class DSL {
      * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
-     * <code>SELECT DISTINCT *</code> semantics.
+     * <code>SELECT DISTINCT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
      * @see DSLContext#selectDistinct(Collection)
      */
@@ -2743,8 +2757,14 @@ public class DSL {
      *  .orderBy(field2);
      * </pre></code>
      * <p>
-     * Note that passing an empty array (e.g. by not passing any vararg
-     * argument) conveniently produces <code>SELECT DISTINCT *</code> semantics.
+     * Note that passing an empty collection conveniently produces
+     * <code>SELECT DISTINCT *</code> semantics, i.e. it:
+     * <ul>
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
+     * all columns are known</li>
+     * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
+     * using plain SQL</li>
+     * </ul>
      *
      * @see DSLContext#selectDistinct(SelectField...)
      */
@@ -2758,7 +2778,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Field#in(Select)}, {@link Field#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2796,7 +2816,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row2#in(Select)}, {@link Row2#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2834,7 +2854,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row3#in(Select)}, {@link Row3#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2872,7 +2892,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row4#in(Select)}, {@link Row4#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2910,7 +2930,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row5#in(Select)}, {@link Row5#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2948,7 +2968,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row6#in(Select)}, {@link Row6#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -2986,7 +3006,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row7#in(Select)}, {@link Row7#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3024,7 +3044,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row8#in(Select)}, {@link Row8#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3062,7 +3082,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row9#in(Select)}, {@link Row9#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3100,7 +3120,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row10#in(Select)}, {@link Row10#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3138,7 +3158,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row11#in(Select)}, {@link Row11#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3176,7 +3196,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row12#in(Select)}, {@link Row12#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3214,7 +3234,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row13#in(Select)}, {@link Row13#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3252,7 +3272,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row14#in(Select)}, {@link Row14#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3290,7 +3310,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row15#in(Select)}, {@link Row15#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3328,7 +3348,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row16#in(Select)}, {@link Row16#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3366,7 +3386,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row17#in(Select)}, {@link Row17#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3404,7 +3424,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row18#in(Select)}, {@link Row18#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3442,7 +3462,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row19#in(Select)}, {@link Row19#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3480,7 +3500,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row20#in(Select)}, {@link Row20#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3518,7 +3538,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row21#in(Select)}, {@link Row21#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -3556,7 +3576,7 @@ public class DSL {
     /**
      * Create a new DSL subselect statement.
      * <p>
-     * This is the same as {@link #selectDistinct(Field...)}, except that it
+     * This is the same as {@link #selectDistinct(SelectField...)}, except that it
      * declares additional record-level typesafety, which is needed by
      * {@link Row22#in(Select)}, {@link Row22#equal(Select)} and other predicate
      * building methods taking subselect arguments.
@@ -5357,7 +5377,7 @@ public class DSL {
      *
      * @see DSLContext#createSchema(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static CreateSchemaFinalStep createSchema(String schema) {
         return using(new DefaultConfiguration()).createSchema(schema);
     }
@@ -5367,7 +5387,7 @@ public class DSL {
      *
      * @see DSLContext#createSchema(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static CreateSchemaFinalStep createSchema(Name table) {
         return using(new DefaultConfiguration()).createSchema(table);
     }
@@ -5377,7 +5397,7 @@ public class DSL {
      *
      * @see DSLContext#createSchema(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static CreateSchemaFinalStep createSchema(Schema schema) {
         return using(new DefaultConfiguration()).createSchema(schema);
     }
@@ -5387,7 +5407,7 @@ public class DSL {
      *
      * @see DSLContext#createSchemaIfNotExists(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static CreateSchemaFinalStep createSchemaIfNotExists(String schema) {
         return using(new DefaultConfiguration()).createSchemaIfNotExists(schema);
     }
@@ -5397,7 +5417,7 @@ public class DSL {
      *
      * @see DSLContext#createSchemaIfNotExists(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static CreateSchemaFinalStep createSchemaIfNotExists(Name table) {
         return using(new DefaultConfiguration()).createSchemaIfNotExists(table);
     }
@@ -5407,7 +5427,7 @@ public class DSL {
      *
      * @see DSLContext#createSchemaIfNotExists(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static CreateSchemaFinalStep createSchemaIfNotExists(Schema schema) {
         return using(new DefaultConfiguration()).createSchemaIfNotExists(schema);
     }
@@ -5706,7 +5726,7 @@ public class DSL {
      *
      * @see DSLContext#createIndexIfNotExists(String)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     public static CreateIndexStep createIndexIfNotExists(String index) {
         return using(new DefaultConfiguration()).createIndexIfNotExists(index);
     }
@@ -5716,7 +5736,7 @@ public class DSL {
      *
      * @see DSLContext#createIndexIfNotExists(Name)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     public static CreateIndexStep createIndexIfNotExists(Name index) {
         return using(new DefaultConfiguration()).createIndexIfNotExists(index);
     }
@@ -5746,7 +5766,7 @@ public class DSL {
      *
      * @see DSLContext#createUniqueIndexIfNotExists(String)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     public static CreateIndexStep createUniqueIndexIfNotExists(String index) {
         return using(new DefaultConfiguration()).createUniqueIndexIfNotExists(index);
     }
@@ -5756,7 +5776,7 @@ public class DSL {
      *
      * @see DSLContext#createUniqueIndexIfNotExists(Name)
      */
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     public static CreateIndexStep createUniqueIndexIfNotExists(Name index) {
         return using(new DefaultConfiguration()).createUniqueIndexIfNotExists(index);
     }
@@ -5916,7 +5936,7 @@ public class DSL {
      *
      * @see DSLContext#alterTableIfExists(String)
      */
-    @Support
+    @Support({ H2, POSTGRES })
     public static AlterTableStep alterTableIfExists(String table) {
         return using(new DefaultConfiguration()).alterTableIfExists(table);
     }
@@ -5926,7 +5946,7 @@ public class DSL {
      *
      * @see DSLContext#alterTableIfExists(Name)
      */
-    @Support
+    @Support({ H2, POSTGRES })
     public static AlterTableStep alterTableIfExists(Name table) {
         return using(new DefaultConfiguration()).alterTableIfExists(table);
     }
@@ -5936,7 +5956,7 @@ public class DSL {
      *
      * @see DSLContext#alterTableIfExists(Table)
      */
-    @Support
+    @Support({ H2, POSTGRES })
     public static AlterTableStep alterTableIfExists(Table<?> table) {
         return using(new DefaultConfiguration()).alterTableIfExists(table);
     }
@@ -5946,7 +5966,7 @@ public class DSL {
      *
      * @see DSLContext#alterSchema(String)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     public static AlterSchemaStep alterSchema(String schema) {
         return using(new DefaultConfiguration()).alterSchema(schema);
     }
@@ -5956,7 +5976,7 @@ public class DSL {
      *
      * @see DSLContext#alterSchema(Name)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     public static AlterSchemaStep alterSchema(Name schema) {
         return using(new DefaultConfiguration()).alterSchema(schema);
     }
@@ -5966,7 +5986,7 @@ public class DSL {
      *
      * @see DSLContext#alterSchema(Schema)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     public static AlterSchemaStep alterSchema(Schema schema) {
         return using(new DefaultConfiguration()).alterSchema(schema);
     }
@@ -5976,7 +5996,7 @@ public class DSL {
      *
      * @see DSLContext#alterSchemaIfExists(String)
      */
-    @Support
+    @Support({ POSTGRES })
     public static AlterSchemaStep alterSchemaIfExists(String schema) {
         return using(new DefaultConfiguration()).alterSchemaIfExists(schema);
     }
@@ -5986,7 +6006,7 @@ public class DSL {
      *
      * @see DSLContext#alterSchemaIfExists(Name)
      */
-    @Support
+    @Support({ POSTGRES })
     public static AlterSchemaStep alterSchemaIfExists(Name schema) {
         return using(new DefaultConfiguration()).alterSchemaIfExists(schema);
     }
@@ -5996,7 +6016,7 @@ public class DSL {
      *
      * @see DSLContext#alterSchemaIfExists(Schema)
      */
-    @Support
+    @Support({ POSTGRES })
     public static AlterSchemaStep alterSchemaIfExists(Schema schema) {
         return using(new DefaultConfiguration()).alterSchemaIfExists(schema);
     }
@@ -6006,7 +6026,7 @@ public class DSL {
      *
      * @see DSLContext#alterView(String)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     public static AlterViewStep alterView(String view) {
         return using(new DefaultConfiguration()).alterView(view);
     }
@@ -6016,7 +6036,7 @@ public class DSL {
      *
      * @see DSLContext#alterView(Name)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     public static AlterViewStep alterView(Name view) {
         return using(new DefaultConfiguration()).alterView(view);
     }
@@ -6026,7 +6046,7 @@ public class DSL {
      *
      * @see DSLContext#alterView(Table)
      */
-    @Support
+    @Support({ HSQLDB, POSTGRES })
     public static AlterViewStep alterView(Table<?> view) {
         return using(new DefaultConfiguration()).alterView(view);
     }
@@ -6036,7 +6056,7 @@ public class DSL {
      *
      * @see DSLContext#alterViewIfExists(String)
      */
-    @Support
+    @Support({ POSTGRES })
     public static AlterViewStep alterViewIfExists(String view) {
         return using(new DefaultConfiguration()).alterViewIfExists(view);
     }
@@ -6046,7 +6066,7 @@ public class DSL {
      *
      * @see DSLContext#alterViewIfExists(Name)
      */
-    @Support
+    @Support({ POSTGRES })
     public static AlterViewStep alterViewIfExists(Name view) {
         return using(new DefaultConfiguration()).alterViewIfExists(view);
     }
@@ -6056,7 +6076,7 @@ public class DSL {
      *
      * @see DSLContext#alterViewIfExists(Table)
      */
-    @Support
+    @Support({ POSTGRES })
     public static AlterViewStep alterViewIfExists(Table<?> view) {
         return using(new DefaultConfiguration()).alterViewIfExists(view);
     }
@@ -6066,7 +6086,7 @@ public class DSL {
      *
      * @see DSLContext#alterIndex(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static AlterIndexStep alterIndex(String index) {
         return using(new DefaultConfiguration()).alterIndex(index);
     }
@@ -6076,7 +6096,7 @@ public class DSL {
      *
      * @see DSLContext#alterIndex(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static AlterIndexStep alterIndex(Name index) {
         return using(new DefaultConfiguration()).alterIndex(index);
     }
@@ -6086,7 +6106,7 @@ public class DSL {
      *
      * @see DSLContext#alterIndexIfExists(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static AlterIndexStep alterIndexIfExists(String index) {
         return using(new DefaultConfiguration()).alterIndexIfExists(index);
     }
@@ -6096,7 +6116,7 @@ public class DSL {
      *
      * @see DSLContext#alterIndexIfExists(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static AlterIndexStep alterIndexIfExists(Name index) {
         return using(new DefaultConfiguration()).alterIndexIfExists(index);
     }
@@ -6106,7 +6126,7 @@ public class DSL {
      *
      * @see DSLContext#dropSchema(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static DropSchemaStep dropSchema(String schema){
         return using(new DefaultConfiguration()).dropSchema(schema);
     }
@@ -6116,7 +6136,7 @@ public class DSL {
      *
      * @see DSLContext#dropSchema(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static DropSchemaStep dropSchema(Name schema){
         return using(new DefaultConfiguration()).dropSchema(schema);
     }
@@ -6126,7 +6146,7 @@ public class DSL {
      *
      * @see DSLContext#dropSchema(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static DropSchemaStep dropSchema(Schema schema){
         return using(new DefaultConfiguration()).dropSchema(schema);
     }
@@ -6136,7 +6156,7 @@ public class DSL {
      *
      * @see DSLContext#dropSchemaIfExists(String)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static DropSchemaStep dropSchemaIfExists(String schema){
         return using(new DefaultConfiguration()).dropSchemaIfExists(schema);
     }
@@ -6146,7 +6166,7 @@ public class DSL {
      *
      * @see DSLContext#dropSchemaIfExists(Name)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static DropSchemaStep dropSchemaIfExists(Name schema){
         return using(new DefaultConfiguration()).dropSchemaIfExists(schema);
     }
@@ -6156,7 +6176,7 @@ public class DSL {
      *
      * @see DSLContext#dropSchemaIfExists(Schema)
      */
-    @Support({ POSTGRES })
+    @Support({ H2, POSTGRES })
     public static DropSchemaStep dropSchemaIfExists(Schema schema){
         return using(new DefaultConfiguration()).dropSchemaIfExists(schema);
     }
@@ -7009,6 +7029,33 @@ public class DSL {
      */
     public static Name name(String... qualifiedName) {
         return new NameImpl(qualifiedName);
+    }
+
+    /**
+     * Create a new SQL identifier using a qualified name.
+     * <p>
+     * Use this method to construct syntax-safe, SQL-injection-safe SQL
+     * identifiers for use in plain SQL where {@link QueryPart} objects are
+     * accepted. For instance, this can be used with any of these methods:
+     * <ul>
+     * <li> {@link #field(String, QueryPart...)}</li>
+     * <li> {@link #field(String, Class, QueryPart...)}</li>
+     * <li> {@link #field(String, DataType, QueryPart...)}</li>
+     * </ul>
+     * <p>
+     * An example: <code><pre>
+     * // This qualified name here
+     * name("book", "title");
+     *
+     * // ... will render this SQL on SQL Server with RenderNameStyle.QUOTED set
+     * [book].[title]
+     * </pre></code>
+     *
+     * @param qualifiedName The SQL identifier's qualified name parts
+     * @return A {@link QueryPart} that will render the SQL identifier
+     */
+    public static Name name(Collection<String> qualifiedName) {
+        return new NameImpl(qualifiedName.toArray(Tools.EMPTY_STRING));
     }
 
     // -------------------------------------------------------------------------
@@ -11447,7 +11494,7 @@ public class DSL {
      */
     @Support
     public static Field<Date> currentDate() {
-        return new CurrentDate();
+        return new CurrentDate<Date>(SQLDataType.DATE);
     }
 
     /**
@@ -11457,7 +11504,7 @@ public class DSL {
      */
     @Support
     public static Field<Time> currentTime() {
-        return new CurrentTime();
+        return new CurrentTime<Time>(SQLDataType.TIME);
     }
 
     /**
@@ -11467,8 +11514,60 @@ public class DSL {
      */
     @Support
     public static Field<Timestamp> currentTimestamp() {
-        return new CurrentTimestamp();
+        return new CurrentTimestamp<Timestamp>(SQLDataType.TIMESTAMP);
     }
+
+
+    /**
+     * Get the current_date() function.
+     * <p>
+     * This translates into any dialect
+     */
+    @Support
+    public static Field<LocalDate> currentLocalDate() {
+        return new CurrentDate<>(SQLDataType.LOCALDATE);
+    }
+
+    /**
+     * Get the current_time() function.
+     * <p>
+     * This translates into any dialect
+     */
+    @Support
+    public static Field<LocalTime> currentLocalTime() {
+        return new CurrentTime<>(SQLDataType.LOCALTIME);
+    }
+
+    /**
+     * Get the current_timestamp() function.
+     * <p>
+     * This translates into any dialect
+     */
+    @Support
+    public static Field<LocalDateTime> currentLocalDateTime() {
+        return new CurrentTimestamp<>(SQLDataType.LOCALDATETIME);
+    }
+
+    /**
+     * Get the current_time() function.
+     * <p>
+     * This translates into any dialect
+     */
+    @Support
+    public static Field<OffsetTime> currentOffsetTime() {
+        return currentTime().cast(SQLDataType.OFFSETTIME);
+    }
+
+    /**
+     * Get the current_timestamp() function.
+     * <p>
+     * This translates into any dialect
+     */
+    @Support
+    public static Field<OffsetDateTime> currentOffsetDateTime() {
+        return currentTimestamp().cast(SQLDataType.OFFSETDATETIME);
+    }
+
 
     /**
      * Get the date difference in number of days.
@@ -11778,6 +11877,26 @@ public class DSL {
         return trunc(Tools.field(date), part);
     }
 
+
+
+    /**
+     * Truncate a date to the beginning of the day.
+     */
+    @Support({ CUBRID, H2, HSQLDB, POSTGRES })
+    public static Field<LocalDate> trunc(LocalDate date) {
+        return trunc(date, DatePart.DAY);
+    }
+
+    /**
+     * Truncate a date to a given datepart.
+     */
+    @Support({ CUBRID, H2, HSQLDB, POSTGRES })
+    public static Field<LocalDate> trunc(LocalDate date, DatePart part) {
+        return trunc(Tools.field(date), part);
+    }
+
+
+
     /**
      * Truncate a timestamp to the beginning of the day.
      */
@@ -11794,11 +11913,31 @@ public class DSL {
         return trunc(Tools.field(timestamp), part);
     }
 
+
+
+    /**
+     * Truncate a timestamp to the beginning of the day.
+     */
+    @Support({ CUBRID, H2, HSQLDB, POSTGRES })
+    public static Field<LocalDateTime> trunc(LocalDateTime timestamp) {
+        return trunc(timestamp, DatePart.DAY);
+    }
+
+    /**
+     * Truncate a timestamp to a given datepart.
+     */
+    @Support({ CUBRID, H2, HSQLDB, POSTGRES })
+    public static Field<LocalDateTime> trunc(LocalDateTime timestamp, DatePart part) {
+        return trunc(Tools.field(timestamp), part);
+    }
+
+
+
     /**
      * Truncate a date or a timestamp to the beginning of the day.
      */
     @Support({ CUBRID, H2, HSQLDB, POSTGRES })
-    public static <T extends java.util.Date> Field<T> trunc(Field<T> date) {
+    public static <T> Field<T> trunc(Field<T> date) {
         return trunc(date, DatePart.DAY);
     }
 
@@ -11806,7 +11945,7 @@ public class DSL {
      * Truncate a date or a timestamp to a given datepart.
      */
     @Support({ CUBRID, H2, HSQLDB, POSTGRES })
-    public static <T extends java.util.Date> Field<T> trunc(Field<T> date, DatePart part) {
+    public static <T> Field<T> trunc(Field<T> date, DatePart part) {
         return new TruncDate<T>(date, part);
     }
 
@@ -11822,13 +11961,27 @@ public class DSL {
         return extract(Tools.field(value), datePart);
     }
 
+
+
     /**
      * Get the extract(field, datePart) function.
      * <p>
      * This translates into any dialect
      */
     @Support
-    public static Field<Integer> extract(Field<? extends java.util.Date> field, DatePart datePart) {
+    public static Field<Integer> extract(Temporal value, DatePart datePart) {
+        return extract(Tools.field(value), datePart);
+    }
+
+
+
+    /**
+     * Get the extract(field, datePart) function.
+     * <p>
+     * This translates into any dialect
+     */
+    @Support
+    public static Field<Integer> extract(Field<?> field, DatePart datePart) {
         return new Extract(nullSafe(field), datePart);
     }
 
@@ -11843,6 +11996,21 @@ public class DSL {
         return extract(value, DatePart.YEAR);
     }
 
+
+
+    /**
+     * Get the year part of a date.
+     * <p>
+     * This is the same as calling {@link #extract(Temporal, DatePart)}
+     * with {@link DatePart#YEAR}
+     */
+    @Support
+    public static Field<Integer> year(Temporal value) {
+        return extract(value, DatePart.YEAR);
+    }
+
+
+
     /**
      * Get the year part of a date.
      * <p>
@@ -11850,7 +12018,7 @@ public class DSL {
      * with {@link DatePart#YEAR}
      */
     @Support
-    public static Field<Integer> year(Field<? extends java.util.Date> field) {
+    public static Field<Integer> year(Field<?> field) {
         return extract(field, DatePart.YEAR);
     }
 
@@ -11865,6 +12033,21 @@ public class DSL {
         return extract(value, DatePart.MONTH);
     }
 
+
+
+    /**
+     * Get the month part of a date.
+     * <p>
+     * This is the same as calling {@link #extract(Temporal, DatePart)}
+     * with {@link DatePart#MONTH}
+     */
+    @Support
+    public static Field<Integer> month(Temporal value) {
+        return extract(value, DatePart.MONTH);
+    }
+
+
+
     /**
      * Get the month part of a date.
      * <p>
@@ -11872,7 +12055,7 @@ public class DSL {
      * with {@link DatePart#MONTH}
      */
     @Support
-    public static Field<Integer> month(Field<? extends java.util.Date> field) {
+    public static Field<Integer> month(Field<?> field) {
         return extract(field, DatePart.MONTH);
     }
 
@@ -11887,6 +12070,21 @@ public class DSL {
         return extract(value, DatePart.DAY);
     }
 
+
+
+    /**
+     * Get the day part of a date.
+     * <p>
+     * This is the same as calling {@link #extract(Temporal, DatePart)}
+     * with {@link DatePart#DAY}
+     */
+    @Support
+    public static Field<Integer> day(Temporal value) {
+        return extract(value, DatePart.DAY);
+    }
+
+
+
     /**
      * Get the day part of a date.
      * <p>
@@ -11894,7 +12092,7 @@ public class DSL {
      * with {@link DatePart#DAY}
      */
     @Support
-    public static Field<Integer> day(Field<? extends java.util.Date> field) {
+    public static Field<Integer> day(Field<?> field) {
         return extract(field, DatePart.DAY);
     }
 
@@ -11909,6 +12107,21 @@ public class DSL {
         return extract(value, DatePart.HOUR);
     }
 
+
+
+    /**
+     * Get the hour part of a date.
+     * <p>
+     * This is the same as calling {@link #extract(Temporal, DatePart)}
+     * with {@link DatePart#HOUR}
+     */
+    @Support
+    public static Field<Integer> hour(Temporal value) {
+        return extract(value, DatePart.HOUR);
+    }
+
+
+
     /**
      * Get the hour part of a date.
      * <p>
@@ -11916,7 +12129,7 @@ public class DSL {
      * with {@link DatePart#HOUR}
      */
     @Support
-    public static Field<Integer> hour(Field<? extends java.util.Date> field) {
+    public static Field<Integer> hour(Field<?> field) {
         return extract(field, DatePart.HOUR);
     }
 
@@ -11931,6 +12144,21 @@ public class DSL {
         return extract(value, DatePart.MINUTE);
     }
 
+
+
+    /**
+     * Get the minute part of a date.
+     * <p>
+     * This is the same as calling {@link #extract(Temporal, DatePart)}
+     * with {@link DatePart#MINUTE}
+     */
+    @Support
+    public static Field<Integer> minute(Temporal value) {
+        return extract(value, DatePart.MINUTE);
+    }
+
+
+
     /**
      * Get the minute part of a date.
      * <p>
@@ -11938,7 +12166,7 @@ public class DSL {
      * with {@link DatePart#MINUTE}
      */
     @Support
-    public static Field<Integer> minute(Field<? extends java.util.Date> field) {
+    public static Field<Integer> minute(Field<?> field) {
         return extract(field, DatePart.MINUTE);
     }
 
@@ -11953,6 +12181,21 @@ public class DSL {
         return extract(value, DatePart.SECOND);
     }
 
+
+
+    /**
+     * Get the second part of a date.
+     * <p>
+     * This is the same as calling {@link #extract(Temporal, DatePart)}
+     * with {@link DatePart#SECOND}
+     */
+    @Support
+    public static Field<Integer> second(Temporal value) {
+        return extract(value, DatePart.SECOND);
+    }
+
+
+
     /**
      * Get the second part of a date.
      * <p>
@@ -11960,7 +12203,7 @@ public class DSL {
      * with {@link DatePart#SECOND}
      */
     @Support
-    public static Field<Integer> second(Field<? extends java.util.Date> field) {
+    public static Field<Integer> second(Field<?> field) {
         return extract(field, DatePart.SECOND);
     }
 
@@ -12036,13 +12279,171 @@ public class DSL {
         return new DateOrTime<Timestamp>(field, SQLDataType.TIMESTAMP);
     }
 
+
+    /**
+     * Convert a string value to a <code>DATE</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalDate> localDate(String value) {
+        return Tools.field(Convert.convert(value, LocalDate.class), LocalDate.class);
+    }
+
+    /**
+     * Convert a temporal value to a <code>DATE</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalDate> localDate(LocalDate value) {
+        return localDate(Tools.field(value));
+    }
+
+    /**
+     * Convert a temporal value to a <code>DATE</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalDate> localDate(Field<LocalDate> field) {
+        return new DateOrTime<LocalDate>(field, SQLDataType.LOCALDATE);
+    }
+
+    /**
+     * Convert a string value to a <code>TIME</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalTime> localTime(String value) {
+        return Tools.field(Convert.convert(value, LocalTime.class), LocalTime.class);
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIME</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalTime> localTime(LocalTime value) {
+        return localTime(Tools.field(value));
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIME</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalTime> localTime(Field<LocalTime> field) {
+        return new DateOrTime<LocalTime>(field, SQLDataType.LOCALTIME);
+    }
+
+    /**
+     * Convert a string value to a <code>TIMESTAMP</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalDateTime> localDateTime(String value) {
+        return Tools.field(Convert.convert(value, LocalDateTime.class), LocalDateTime.class);
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIMESTAMP</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalDateTime> localDateTime(LocalDateTime value) {
+        return localDateTime(Tools.field(value));
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIMESTAMP</code>.
+     */
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    public static Field<LocalDateTime> localDateTime(Field<LocalDateTime> field) {
+        return new DateOrTime<LocalDateTime>(field, SQLDataType.LOCALDATETIME);
+    }
+
+    /**
+     * Convert a string value to a <code>TIME WITH TIME ZONE</code>.
+     * <p>
+     * Depending on whether the database preserves the time zone information
+     * (e.g. {@link SQLDialect#ORACLE}) or not (e.g.
+     * {@link SQLDialect#POSTGRES}), the resulting value might be converted to
+     * UTC. Regardless of this fact, the result should be the same
+     * {@link Instant} (in UTC) as the input.
+     */
+    @Support({ POSTGRES })
+    public static Field<OffsetTime> offsetTime(String value) {
+        return Tools.field(Convert.convert(value, OffsetTime.class), OffsetTime.class);
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIME WITH TIME ZONE</code>.
+     * <p>
+     * Depending on whether the database preserves the time zone information
+     * (e.g. {@link SQLDialect#ORACLE}) or not (e.g.
+     * {@link SQLDialect#POSTGRES}), the resulting value might be converted to
+     * UTC. Regardless of this fact, the result should be the same
+     * {@link Instant} (in UTC) as the input.
+     */
+    @Support({ POSTGRES })
+    public static Field<OffsetTime> offsetTime(OffsetTime value) {
+        return offsetTime(Tools.field(value));
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIME WITH TIME ZONE</code>.
+     * <p>
+     * Depending on whether the database preserves the time zone information
+     * (e.g. {@link SQLDialect#ORACLE}) or not (e.g.
+     * {@link SQLDialect#POSTGRES}), the resulting value might be converted to
+     * UTC. Regardless of this fact, the result should be the same
+     * {@link Instant} (in UTC) as the input.
+     */
+    @Support({ POSTGRES })
+    public static Field<OffsetTime> offsetTime(Field<OffsetTime> field) {
+        return new DateOrTime<OffsetTime>(field, SQLDataType.OFFSETTIME);
+    }
+
+    /**
+     * Convert a string value to a <code>TIMESTAMP WITH TIME ZONE</code>.
+     * <p>
+     * Depending on whether the database preserves the time zone information
+     * (e.g. {@link SQLDialect#ORACLE}) or not (e.g.
+     * {@link SQLDialect#POSTGRES}), the resulting value might be converted to
+     * UTC. Regardless of this fact, the result should be the same
+     * {@link Instant} (in UTC) as the input.
+     */
+    @Support({ POSTGRES })
+    public static Field<OffsetDateTime> offsetDateTime(String value) {
+        return Tools.field(Convert.convert(value, OffsetDateTime.class), OffsetDateTime.class);
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIMESTAMP WITH TIME ZONE</code>.
+     * <p>
+     * Depending on whether the database preserves the time zone information
+     * (e.g. {@link SQLDialect#ORACLE}) or not (e.g.
+     * {@link SQLDialect#POSTGRES}), the resulting value might be converted to
+     * UTC. Regardless of this fact, the result should be the same
+     * {@link Instant} (in UTC) as the input.
+     */
+    @Support({ POSTGRES })
+    public static Field<OffsetDateTime> offsetDateTime(OffsetDateTime value) {
+        return offsetDateTime(Tools.field(value));
+    }
+
+    /**
+     * Convert a temporal value to a <code>TIMESTAMP WITH TIME ZONE</code>.
+     * <p>
+     * Depending on whether the database preserves the time zone information
+     * (e.g. {@link SQLDialect#ORACLE}) or not (e.g.
+     * {@link SQLDialect#POSTGRES}), the resulting value might be converted to
+     * UTC. Regardless of this fact, the result should be the same
+     * {@link Instant} (in UTC) as the input.
+     */
+    @Support({ POSTGRES })
+    public static Field<OffsetDateTime> offsetDateTime(Field<OffsetDateTime> field) {
+        return new DateOrTime<OffsetDateTime>(field, SQLDataType.OFFSETDATETIME);
+    }
+
+
     /**
      * Parse a value to a <code>DATE</code>.
      *
      * @param value The formatted <code>DATE</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Date> toDate(String value, String format) {
         return toDate(Tools.field(value, SQLDataType.VARCHAR), Tools.field(format, SQLDataType.VARCHAR));
     }
@@ -12053,7 +12454,7 @@ public class DSL {
      * @param value The formatted <code>DATE</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Date> toDate(String value, Field<String> format) {
         return toDate(Tools.field(value, SQLDataType.VARCHAR), nullSafe(format));
     }
@@ -12064,7 +12465,7 @@ public class DSL {
      * @param value The formatted <code>DATE</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Date> toDate(Field<String> value, String format) {
         return toDate(nullSafe(value), Tools.field(format, SQLDataType.VARCHAR));
     }
@@ -12075,9 +12476,9 @@ public class DSL {
      * @param value The formatted <code>DATE</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Date> toDate(Field<String> value, Field<String> format) {
-        return DSL.field("to_date({0}, {1})", SQLDataType.DATE, nullSafe(value), nullSafe(format));
+        return DSL.field("{to_date}({0}, {1})", SQLDataType.DATE, nullSafe(value), nullSafe(format));
     }
 
     /**
@@ -12086,7 +12487,7 @@ public class DSL {
      * @param value The formatted <code>TIMESTAMP</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Timestamp> toTimestamp(String value, String format) {
         return toTimestamp(Tools.field(value, SQLDataType.VARCHAR), Tools.field(format, SQLDataType.VARCHAR));
     }
@@ -12097,7 +12498,7 @@ public class DSL {
      * @param value The formatted <code>TIMESTAMP</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Timestamp> toTimestamp(String value, Field<String> format) {
         return toTimestamp(Tools.field(value, SQLDataType.VARCHAR), nullSafe(format));
     }
@@ -12108,7 +12509,7 @@ public class DSL {
      * @param value The formatted <code>TIMESTAMP</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Timestamp> toTimestamp(Field<String> value, String format) {
         return toTimestamp(nullSafe(value), Tools.field(format, SQLDataType.VARCHAR));
     }
@@ -12119,10 +12520,102 @@ public class DSL {
      * @param value The formatted <code>TIMESTAMP</code> value.
      * @param format The vendor-specific formatting string.
      */
-    @Support({ POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Field<Timestamp> toTimestamp(Field<String> value, Field<String> format) {
-        return DSL.field("to_timestamp({0}, {1})", SQLDataType.TIMESTAMP, nullSafe(value), nullSafe(format));
+        return DSL.field("{to_timestamp}({0}, {1})", SQLDataType.TIMESTAMP, nullSafe(value), nullSafe(format));
     }
+
+
+
+    /**
+     * Parse a value to a <code>DATE</code>.
+     *
+     * @param value The formatted <code>DATE</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDate> toLocalDate(String value, String format) {
+        return toDate(value, format).coerce(SQLDataType.LOCALDATE);
+    }
+
+    /**
+     * Parse a value to a <code>DATE</code>.
+     *
+     * @param value The formatted <code>DATE</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDate> toLocalDate(String value, Field<String> format) {
+        return toDate(value, format).coerce(SQLDataType.LOCALDATE);
+    }
+
+    /**
+     * Parse a value to a <code>DATE</code>.
+     *
+     * @param value The formatted <code>DATE</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDate> toLocalDate(Field<String> value, String format) {
+        return toDate(value, format).coerce(SQLDataType.LOCALDATE);
+    }
+
+    /**
+     * Parse a value to a <code>DATE</code>.
+     *
+     * @param value The formatted <code>DATE</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDate> toLocalDate(Field<String> value, Field<String> format) {
+        return toDate(value, format).coerce(SQLDataType.LOCALDATE);
+    }
+
+    /**
+     * Parse a value to a <code>TIMESTAMP</code>.
+     *
+     * @param value The formatted <code>TIMESTAMP</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDateTime> toLocalDateTime(String value, String format) {
+        return toTimestamp(value, format).coerce(SQLDataType.LOCALDATETIME);
+    }
+
+    /**
+     * Parse a value to a <code>TIMESTAMP</code>.
+     *
+     * @param value The formatted <code>TIMESTAMP</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDateTime> toLocalDateTime(String value, Field<String> format) {
+        return toTimestamp(value, format).coerce(SQLDataType.LOCALDATETIME);
+    }
+
+    /**
+     * Parse a value to a <code>TIMESTAMP</code>.
+     *
+     * @param value The formatted <code>TIMESTAMP</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDateTime> toLocalDateTime(Field<String> value, String format) {
+        return toTimestamp(value, format).coerce(SQLDataType.LOCALDATETIME);
+    }
+
+    /**
+     * Parse a value to a <code>TIMESTAMP</code>.
+     *
+     * @param value The formatted <code>TIMESTAMP</code> value.
+     * @param format The vendor-specific formatting string.
+     */
+    @Support({ H2, HSQLDB, POSTGRES })
+    public static Field<LocalDateTime> toLocalDateTime(Field<String> value, Field<String> format) {
+        return toTimestamp(value, format).coerce(SQLDataType.LOCALDATETIME);
+    }
+
+
 
     // ------------------------------------------------------------------------
     // XXX Construction of GROUPING SET functions
@@ -18029,6 +18522,13 @@ public class DSL {
      */
     protected static <T> Field<T> nullSafe(Field<T> field) {
         return field == null ? val((T) null) : field;
+    }
+
+    /**
+     * Null-safety of a field.
+     */
+    protected static <T> Field<T> nullSafe(Field<T> field, DataType<?> type) {
+        return field == null ? (Field<T>) val((T) null, type) : field;
     }
 
     /**

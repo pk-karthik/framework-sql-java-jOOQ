@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -58,6 +52,7 @@ import static org.jooq.SQLDialect.POSTGRES_9_5;
  * </pre></code>
  *
  * @author Lukas Eder
+ * @author Fabrice Le Roy
  */
 public interface InsertOnConflictDoUpdateStep<R extends Record> {
 
@@ -66,4 +61,10 @@ public interface InsertOnConflictDoUpdateStep<R extends Record> {
      */
     @Support({ POSTGRES_9_5 })
     InsertOnDuplicateSetStep<R> doUpdate();
+
+    /**
+     * Add the <code>DO IGNORE</code> clause.
+     */
+    @Support({ POSTGRES_9_5 })
+    InsertFinalStep<R> doNothing();
 }

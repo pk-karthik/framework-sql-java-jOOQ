@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -68,6 +62,13 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
     }
 
     @Override
+    public final File getFileRoot() {
+        String dir = getTargetDirectory();
+        String pkg = getTargetPackage().replaceAll("\\.", "/");
+        return new File(dir + "/" + pkg);
+    }
+
+    @Override
     public final File getFile(Definition definition) {
         return getFile(definition, Mode.DEFAULT);
     }
@@ -84,6 +85,11 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
         String dir = getTargetDirectory();
         String pkg = getTargetPackage().replaceAll("\\.", "/");
         return new File(dir + "/" + pkg, fileName);
+    }
+
+    @Override
+    public final String getFileHeader(Definition definition) {
+        return getFileHeader(definition, Mode.DEFAULT);
     }
 
     @Override
@@ -245,5 +251,43 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
         }
 
         return result;
+    }
+
+    /**
+     * [#4168] [#5783] Some identifiers must not be modified by custom strategies.
+     */
+    final String getFixedJavaIdentifier(Definition definition) {
+
+        // [#1473] Identity identifiers should not be renamed by custom strategies
+        if (definition instanceof IdentityDefinition)
+            return "IDENTITY_" + getJavaIdentifier(((IdentityDefinition) definition).getColumn().getContainer());
+
+        // [#2032] Intercept default Catalog
+        else if (definition instanceof CatalogDefinition && ((CatalogDefinition) definition).isDefaultCatalog())
+            return "DEFAULT_CATALOG";
+
+        // [#2089] Intercept default schema
+        else if (definition instanceof SchemaDefinition && ((SchemaDefinition) definition).isDefaultSchema())
+            return "DEFAULT_SCHEMA";
+
+        else
+            return null;
+    }
+
+    /**
+     * [#4168] [#5783] Some class names must not be modified by custom strategies.
+     */
+    final String getFixedJavaClassName(Definition definition) {
+
+        // [#2032] Intercept default catalog
+        if (definition instanceof CatalogDefinition && ((CatalogDefinition) definition).isDefaultCatalog())
+            return "DefaultCatalog";
+
+        // [#2089] Intercept default schema
+        else if (definition instanceof SchemaDefinition && ((SchemaDefinition) definition).isDefaultSchema())
+            return "DefaultSchema";
+
+        else
+            return null;
     }
 }

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.tools;
 
@@ -55,6 +49,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -490,8 +485,18 @@ public final class Convert {
                 // Regular checks
                 else if (fromClass == byte[].class) {
 
-                    // This may not make much sense. Any other options?
-                    return convert(Arrays.toString((byte[]) from), toClass);
+                    // [#5824] UUID's most significant bits in byte[] are first
+                    if (toClass == UUID.class) {
+                        ByteBuffer b = ByteBuffer.wrap((byte[]) from);
+                        long mostSigBits = b.getLong();
+                        long leastSigBits = b.getLong();
+                        return (U) new UUID(mostSigBits, leastSigBits);
+                    }
+
+                    // [#5569] Binary data is expected to be in JVM's default encoding
+                    else {
+                        return convert(new String((byte[]) from), toClass);
+                    }
                 }
                 else if (fromClass.isArray()) {
 
@@ -517,6 +522,21 @@ public final class Convert {
                     }
 
                     return (U) from.toString();
+                }
+
+                // [#5569] It should be possible, at least, to convert an empty string to an empty (var)binary.
+                else if (toClass == byte[].class) {
+
+                    // [#5824] UUID's most significant bits in byte[] are first
+                    if (from instanceof UUID) {
+                        ByteBuffer b = ByteBuffer.wrap(new byte[16]);
+                        b.putLong(((UUID) from).getMostSignificantBits());
+                        b.putLong(((UUID) from).getLeastSignificantBits());
+                        return (U)b.array();
+                    }
+                    else {
+                        return (U) from.toString().getBytes();
+                    }
                 }
 
                 // Various number types are converted between each other via String

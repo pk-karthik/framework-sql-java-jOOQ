@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -57,7 +51,7 @@ public interface RecordContext extends Scope {
      * <ul>
      * <li>{@link ExecuteType#BATCH} when calling
      * {@link DSLContext#batchStore(UpdatableRecord...) batchStore()},
-     * {@link DSLContext#batchInsert(UpdatableRecord...) batchInsert()},
+     * {@link DSLContext#batchInsert(TableRecord...) batchInsert()},
      * {@link DSLContext#batchUpdate(UpdatableRecord...) batchUpdate()},
      * {@link DSLContext#batchDelete(UpdatableRecord...) batchDelete()}.</li>
      * <li>{@link ExecuteType#READ} when calling

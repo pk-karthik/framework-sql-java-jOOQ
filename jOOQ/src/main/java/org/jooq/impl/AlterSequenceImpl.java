@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.impl;
 
@@ -45,7 +39,14 @@ import static org.jooq.Clause.ALTER_SEQUENCE;
 import static org.jooq.Clause.ALTER_SEQUENCE_RENAME;
 import static org.jooq.Clause.ALTER_SEQUENCE_RESTART;
 import static org.jooq.Clause.ALTER_SEQUENCE_SEQUENCE;
+// ...
+// ...
 import static org.jooq.SQLDialect.CUBRID;
+// ...
+import static org.jooq.SQLDialect.DERBY;
+import static org.jooq.SQLDialect.FIREBIRD;
+// ...
+// ...
 // ...
 // ...
 
@@ -123,14 +124,67 @@ final class AlterSequenceImpl<T extends Number> extends AbstractQuery implements
     // XXX: QueryPart API
     // ------------------------------------------------------------------------
 
+    private final boolean supportsIfExists(Context<?> ctx) {
+        return !asList(CUBRID, DERBY, FIREBIRD).contains(ctx.family());
+    }
+
     @Override
     public final void accept(Context<?> ctx) {
+        if (ifExists && !supportsIfExists(ctx)) {
+            Tools.executeImmediateIfExistsBegin(ctx, DDLStatementType.ALTER_SEQUENCE, sequence);
+            accept0(ctx);
+            Tools.executeImmediateIfExistsEnd(ctx, DDLStatementType.ALTER_SEQUENCE, sequence);
+        }
+        else {
+            accept0(ctx);
+        }
+    }
+
+    private final void accept0(Context<?> ctx) {
+        switch (ctx.family()) {
+
+
+
+
+
+
+
+
+
+
+            default:
+                accept1(ctx);
+                break;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private final void accept1(Context<?> ctx) {
         ctx.start(ALTER_SEQUENCE_SEQUENCE)
            .keyword("alter")
            .sql(' ')
            .keyword(ctx.family() == CUBRID ? "serial" : "sequence");
 
-        if (ifExists)
+        if (ifExists && supportsIfExists(ctx))
             ctx.sql(' ').keyword("if exists");
 
         switch (ctx.family()) {

@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -65,8 +59,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jooq.AggregateFunction;
@@ -93,11 +89,13 @@ import org.jooq.Results;
 import org.jooq.Routine;
 import org.jooq.SQLDialect;
 import org.jooq.Schema;
+import org.jooq.UDT;
 import org.jooq.UDTField;
 import org.jooq.UDTRecord;
 import org.jooq.exception.ControlFlowSignal;
 import org.jooq.exception.MappingException;
 import org.jooq.tools.Convert;
+import org.jooq.tools.reflect.Reflect;
 
 /**
  * A common base class for stored procedures
@@ -129,6 +127,7 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
     private ResultsImpl                       results;
     private boolean                           overloaded;
     private boolean                           hasUnnamedParameters;
+
 
 
 
@@ -553,10 +552,29 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
     private final void bind1(BindContext context, Parameter<?> parameter, boolean bindAsIn, boolean bindAsOut) {
         int index = context.peekIndex();
 
-        if (bindAsOut)
+        if (bindAsOut) {
             resultIndexes.put(parameter, index);
 
+
+
+
+
+        }
+
         if (bindAsIn) {
+
+
+
+
+
+
+
+
+
+
+
+
+
             context.visit(getInValues().get(parameter));
 
             // [#391] This happens when null literals are used as IN/OUT
@@ -564,7 +582,16 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
             // be registered as OUT parameter
             if (index == context.peekIndex() && bindAsOut)
                 context.nextIndex();
+
+
+
+
         }
+
+
+
+
+
 
         // Skip one index for OUT parameters
         else {
@@ -584,6 +611,7 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
 
         String separator = "";
         List<Parameter<?>> parameters = getParameters();
+        Map<Integer, Parameter<?>> indexes = new LinkedHashMap<Integer, Parameter<?>>();
         for (int i = 0; i < parameters.size(); i++) {
             Parameter<?> parameter = parameters.get(i);
 
@@ -591,31 +619,56 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
             if (parameter.equals(getReturnParameter()))
                 continue;
 
-            // OUT and IN OUT parameters are always written as a '?' bind variable
-            if (getOutParameters().contains(parameter)) {
-                context.sql(separator);
-                toSQLOutParam(context, parameter, i);
-            }
-
             // [#1183] [#3533] Omit defaulted parameters
-            else if (inValuesDefaulted.contains(parameter)) {
+            else if (inValuesDefaulted.contains(parameter))
                 continue;
-            }
+
+            // Ordinary IN, INOUT, and OUT parameters
+            else
+                indexes.put(i, parameter);
+        }
+
+        boolean indent = false;
+
+
+
+
+
+
+        if (indent)
+            context.formatIndentStart()
+                   .formatNewLine();
+
+        int i = 0;
+        for (Entry<Integer, Parameter<?>> entry : indexes.entrySet()) {
+            Parameter<?> parameter = entry.getValue();
+            int index = entry.getKey();
+            context.sql(separator);
+
+            if (indent && i++ > 0)
+                context.formatNewLine();
+
+            // OUT and IN OUT parameters are always written as a '?' bind variable
+            if (getOutParameters().contains(parameter))
+                toSQLOutParam(context, parameter, index);
 
             // IN parameters are rendered normally
-            else {
-                context.sql(separator);
-                toSQLInParam(context, parameter, i, getInValues().get(parameter));
-            }
+            else
+                toSQLInParam(context, parameter, index, getInValues().get(parameter));
 
             separator = ", ";
         }
+
+        if (indent)
+            context.formatIndentEnd().formatNewLine();
 
         context.sql(')');
         toSQLEnd(context);
     }
 
     private final void toSQLEnd(RenderContext context) {
+
+
 
 
 
@@ -671,9 +724,27 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
 
 
 
+
+
+
+
+
+
+
     }
 
     private final void toSQLBegin(RenderContext context) {
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -687,7 +758,151 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private final void toSQLAssign(RenderContext context) {
+
+
 
 
 
@@ -726,10 +941,14 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
 
 
 
+
+
         context.sql('?');
     }
 
     private final void toSQLInParam(RenderContext context, Parameter<?> parameter, int index, Field<?> value) {
+
+
 
 
 
@@ -776,15 +995,27 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
     }
 
     private final <U> void fetchOutParameter(ExecuteContext ctx, Parameter<U> parameter) throws SQLException {
-        DefaultBindingGetStatementContext<U> out = new DefaultBindingGetStatementContext<U>(
-            ctx.configuration(),
-            ctx.data(),
-            (CallableStatement) ctx.statement(),
-            resultIndexes.get(parameter)
-        );
 
-        parameter.getBinding().get(out);
-        outValues.put(parameter, out.value());
+
+
+
+
+
+
+
+
+
+        {
+            DefaultBindingGetStatementContext<U> out = new DefaultBindingGetStatementContext<U>(
+                ctx.configuration(),
+                ctx.data(),
+                (CallableStatement) ctx.statement(),
+                resultIndexes.get(parameter)
+            );
+
+            parameter.getBinding().get(out);
+            outValues.put(parameter, out.value());
+        }
     }
 
     private final void registerOutParameters(ExecuteContext ctx) throws SQLException {
@@ -800,6 +1031,12 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
     }
 
     private final <U> void registerOutParameter(Configuration c, Map<Object, Object> data, CallableStatement statement, Parameter<U> parameter) throws SQLException {
+
+
+
+
+
+
         parameter.getBinding().register(new DefaultBindingRegisterContext<U>(c, data, statement, resultIndexes.get(parameter)));
     }
 
@@ -916,6 +1153,10 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
 
 
 
+
+
+
+
     private final boolean hasUnnamedParameters() {
         return hasUnnamedParameters;
     }
@@ -928,7 +1169,27 @@ public abstract class AbstractRoutine<T> extends AbstractQueryPart implements Ro
 
 
 
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private final boolean resultParameter(Parameter<?> parameter) {
         return parameter.equals(getReturnParameter()) || getOutParameters().contains(parameter);

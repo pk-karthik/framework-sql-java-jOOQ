@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,9 +31,6 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq.util;
 
@@ -54,6 +48,7 @@ import java.util.regex.Pattern;
 import javax.xml.bind.JAXB;
 
 import org.jooq.DataType;
+import org.jooq.Name;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.impl.DateAsTimestampBinding;
 import org.jooq.impl.DefaultDataType;
@@ -134,7 +129,7 @@ abstract class AbstractTypedElementDefinition<T extends Definition>
             if (dataType != null) {
                 if (dataType.getSQLType() == Types.DATE) {
                     DataType<?> forcedDataType = DefaultDataType.getDataType(db.getDialect(), SQLDataType.TIMESTAMP.getTypeName(), 0, 0);
-                    result = new DefaultDataTypeDefinition(db, child.getSchema(), forcedDataType.getTypeName(), 0, 0, 0, result.isNullable(), result.getDefaultValue(), null, null, DateAsTimestampBinding.class.getName());
+                    result = new DefaultDataTypeDefinition(db, child.getSchema(), forcedDataType.getTypeName(), 0, 0, 0, result.isNullable(), result.getDefaultValue(), (Name) null, null, DateAsTimestampBinding.class.getName());
                 }
             }
         }
@@ -160,7 +155,12 @@ abstract class AbstractTypedElementDefinition<T extends Definition>
             }
 
             if (type != null) {
-                log.info("Forcing type", child + " with type " + definedType.getType() + " into " + type + (converter != null ? " using converter " + converter : ""));
+                log.info("Forcing type", child
+                    + " with type " + definedType.getType()
+                    + " into " + type
+                    + (converter != null ? " using converter " + converter : "")
+                    + (binding != null ? " using binding " + binding : ""));
+
                 DataType<?> forcedDataType = null;
 
                 boolean n = result.isNullable();
@@ -188,7 +188,7 @@ abstract class AbstractTypedElementDefinition<T extends Definition>
 
                 // [#677] SQLDataType matches are actual type-rewrites
                 if (forcedDataType != null) {
-                    result = new DefaultDataTypeDefinition(db, child.getSchema(), type, l, p, s, n, d, null, converter, binding);
+                    result = new DefaultDataTypeDefinition(db, child.getSchema(), type, l, p, s, n, d, (Name) null, converter, binding);
                 }
 
                 // Other forced types are UDT's, enums, etc.
@@ -197,7 +197,7 @@ abstract class AbstractTypedElementDefinition<T extends Definition>
                     p = result.getPrecision();
                     s = result.getScale();
                     String t = result.getType();
-                    String u = result.getUserType();
+                    Name u = result.getQualifiedUserType();
                     result = new DefaultDataTypeDefinition(db, child.getSchema(), t, l, p, s, n, d, u, converter, binding, type);
                 }
 

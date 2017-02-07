@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -60,6 +54,7 @@ import java.util.regex.Pattern;
 
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.exception.MockFileDatabaseException;
 import org.jooq.impl.DSL;
 import org.jooq.tools.JooqLogger;
 
@@ -118,6 +113,7 @@ import org.jooq.tools.JooqLogger;
  * This implementation is still very experimental and not officially supported!
  *
  * @author Lukas Eder
+ * @author Samy Deghou
  */
 public class MockFileDatabase implements MockDataProvider {
 
@@ -127,6 +123,7 @@ public class MockFileDatabase implements MockDataProvider {
     private final Map<String, List<MockResult>>  matchExactly;
     private final Map<Pattern, List<MockResult>> matchPattern;
     private final DSLContext                     create;
+    private String                               nullLiteral;
 
     public MockFileDatabase(File file) throws IOException {
         this(file, "UTF-8");
@@ -150,6 +147,18 @@ public class MockFileDatabase implements MockDataProvider {
 
     public MockFileDatabase(String string) throws IOException {
         this(new StringReader(string));
+    }
+
+    /**
+     * Specify the <code>null</code> literal, i.e. the string that should be
+     * parsed as a <code>null</code> reference, rather than as the string
+     * itself.
+     *
+     * @see DSLContext#fetchFromTXT(String, String)
+     */
+    public MockFileDatabase nullLiteral(String literal) {
+        this.nullLiteral = literal;
+        return this;
     }
 
     private MockFileDatabase(LineNumberReader reader) throws IOException {
@@ -278,7 +287,16 @@ public class MockFileDatabase implements MockDataProvider {
                     rows = Integer.parseInt(rowString.substring(7).trim());
                 }
 
-                return new MockResult(rows, create.fetchFromTXT(currentResult.toString()));
+                MockResult result = new MockResult(rows,
+                    nullLiteral == null
+                    ? create.fetchFromTXT(currentResult.toString())
+                    : create.fetchFromTXT(currentResult.toString(), nullLiteral)
+                );
+
+                if (rows != result.data.size())
+                    throw new MockFileDatabaseException("Rows mismatch. Declared: " + rows + ". Actual: " + result.data.size() + ".");
+
+                return result;
             }
 
             private String readLine() throws IOException {

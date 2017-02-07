@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,9 +18,6 @@
  * database integrations.
  *
  * For more information, please visit: http://www.jooq.org/licenses
- *
- *
- *
  *
  *
  *
@@ -180,7 +174,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * @see UpdatableRecord#delete()
      * @see Settings#isExecuteWithOptimisticLocking()
      */
-    TableField<R, ? extends Number> getRecordVersion();
+    TableField<R, ?> getRecordVersion();
 
     /**
      * A "timestamp" field holding record timestamp information used for
@@ -205,7 +199,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * @see UpdatableRecord#delete()
      * @see Settings#isExecuteWithOptimisticLocking()
      */
-    TableField<R, ? extends java.util.Date> getRecordTimestamp();
+    TableField<R, ?> getRecordTimestamp();
 
     /**
      * Retrieve all of the table's unique keys.
@@ -425,7 +419,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * MY_TABLE.as(MY_OTHER_TABLE, f -> MY_OTHER_TABLE.field(f));
      * </pre></code>
      *
-     * @param alias The alias name
+     * @param otherTable The other table whose name is used as alias name
      * @param aliasFunction The function providing field aliases.
      * @return The table alias
      */
@@ -443,7 +437,7 @@ public interface Table<R extends Record> extends TableLike<R> {
      * MY_TABLE.as("t1", (f, i) -> "column" + i);
      * </pre></code>
      *
-     * @param alias The alias name
+     * @param otherTable The other table whose name is used as alias name
      * @param aliasFunction The function providing field aliases.
      * @return The table alias
      */

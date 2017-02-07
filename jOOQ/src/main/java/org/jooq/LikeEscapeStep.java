@@ -1,7 +1,4 @@
-/**
- * Copyright (c) 2009-2016, Data Geekery GmbH (http://www.datageekery.com)
- * All rights reserved.
- *
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,36 +31,45 @@
  *
  *
  *
- *
- *
- *
  */
 package org.jooq;
 
+// ...
+import static org.jooq.SQLDialect.CUBRID;
+// ...
+import static org.jooq.SQLDialect.DERBY;
+import static org.jooq.SQLDialect.FIREBIRD;
+import static org.jooq.SQLDialect.H2;
+// ...
+import static org.jooq.SQLDialect.HSQLDB;
+// ...
+import static org.jooq.SQLDialect.MARIADB;
+import static org.jooq.SQLDialect.MYSQL;
+// ...
+import static org.jooq.SQLDialect.POSTGRES;
+import static org.jooq.SQLDialect.SQLITE;
+// ...
+// ...
+// ...
+
 /**
- * An <code>FunctionalInterface</code> that wraps transactional code.
+ * A step in the creation of a <code>LIKE</code> predicate to which an
+ * <code>ESCAPE</code> clause can be appended.
  *
  * @author Lukas Eder
  */
+public interface LikeEscapeStep extends Condition {
 
-@FunctionalInterface
-
-public interface ThreadLocalTransactionalCallable<T> {
 
     /**
-     * Run the transactional code.
+     * Add an <code>ESCAPE</code> clause to the <code>LIKE</code> predicate.
      * <p>
-     * If this method completes normally, and this is not a nested transaction,
-     * then the transaction will be committed. If this method completes with an
-     * exception, then the transaction is rolled back to the beginning of this
-     * <code>ThreadLocalTransactionalCallable</code>.
+     * For example:
      *
-     * @return The outcome of the transaction.
-     * @throws Exception Any exception that will cause a rollback of the code
-     *             contained in this transaction. If this is a nested
-     *             transaction, the rollback may be performed only to the state
-     *             before executing this
-     *             <code>ThreadLocalTransactionalCallable</code>.
+     * <code><pre>
+     * some_column LIKE 'A!%%' ESCAPE '!'
+     * </pre></code>
      */
-    T run() throws Exception;
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    Condition escape(char c);
 }
